@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.shader": "shaderlab",
+        "intnn_tools.h": "c",
+        "stdio.h": "c",
+        "intnn_consts.h": "c"
+    }
+}
