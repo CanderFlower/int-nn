@@ -15,11 +15,15 @@
 
 // 检查矩阵所有元素等于某值
 void check_all_equal(intnn_mat* mat, int val, const char* msg) {
-    for (int r = 0; r < intnn_rows(mat); r++) {
-        for (int c = 0; c < intnn_cols(mat); c++) {
-            TEST_ASSERT(intnn_get_elem(mat, r, c) == val, msg);
+    for (int i = 0; i < intnn_rows(mat); i++) {
+        for (int j = 0; j < intnn_cols(mat); j++) {
+            if (intnn_get_elem(mat, i, j) != val) {
+                printf("[FAILED] %s at (%d, %d)\n", msg, i, j);
+                exit(1);
+            }
         }
     }
+    printf("[PASSED] %s\n", msg);
 }
 
 void test_create_and_free() {
