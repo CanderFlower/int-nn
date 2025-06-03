@@ -10,29 +10,42 @@ set SRC_DIR=src
 REM 测试代码目录
 set TEST_DIR=tests
 
-REM 编译器（这里用gcc，如果用MSVC可以改）
+REM 编译器
 set CC=gcc
 
-REM 输出可执行文件名
-set EXE_NAME=test_intnn_mat.exe
+REM 编译选项
+set CFLAGS=-I%INC_DIR% -Wall -Wextra -O2
 
-REM 收集所有源文件
+REM 找到所有源文件（src/*.c），生成源码文件列表（空格分隔）
 set SRC_FILES=
-
 for %%f in (%SRC_DIR%\*.c) do (
     set SRC_FILES=!SRC_FILES! %%f
 )
 
-REM 编译并链接
-echo 编译并链接测试程序...
-%CC% -I%INC_DIR% -o %TEST_DIR%\%EXE_NAME% %SRC_FILES% %TEST_DIR%\test_intnn_mat.c -Wall -Wextra -O2
+REM 遍历每个测试文件，分别编译链接，生成独立可执行文件，运行
+for %%t in (%TEST_DIR%\*.c) do (
+    REM 这里直接用 %%~nt 获得测试文件名（不含路径和扩展名）
+    set TEST_NAME=%%~nt
 
-if errorlevel 1 (
-    echo 编译失败！
-    exit /b 1
+    REM 启用延迟扩展以正确获取变量
+    setlocal enabledelayedexpansion
+
+    echo 正在编译测试文件：%%t
+
+    %CC% %CFLAGS% -o %TEST_DIR%\!TEST_NAME!.exe %%t !SRC_FILES!
+
+    if errorlevel 1 (
+        echo 编译失败：!TEST_NAME!
+        endlocal
+        exit /b 1
+    )
+
+    echo 运行测试程序：!TEST_NAME!.exe
+    %TEST_DIR%\!TEST_NAME!.exe
+
+    echo -----------------------------------------
+    endlocal
 )
 
-echo 运行测试程序...
-%TEST_DIR%\%EXE_NAME%
-
+echo 全部测试完成。
 pause
