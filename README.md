@@ -6,7 +6,7 @@ Final Project for "Machine Learning Systems" course at Fudan University.
 
 ## Collaborators
 - [@NekoYellow](https://github.com/NekoYellow)
-- [@tuihuademing](https://github.com/tuihuademing)
+- [@tuihuademing2](https://github.com/tuihuademing2)
 - [@CanderFlower](https://github.com/CanderFlower)
 
 ## References
