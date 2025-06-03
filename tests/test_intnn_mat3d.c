@@ -36,25 +36,34 @@ void test_reset_and_dims_equal() {
 }
 
 void test_self_add_and_elem_mul_div() {
-    intnn_mat3d* a = intnn_create_mat3d(1, 2, 2);
-    intnn_mat3d* b = intnn_create_mat3d(1, 2, 2);
+    intnn_mat3d* a = intnn_create_mat3d(1, 1, 2);
+    intnn_mat3d* b = intnn_create_mat3d(1, 1, 2);
 
+    // a = [1, 4]
     intnn_mat3d_set_elem(a, 0, 0, 0, 1);
-    intnn_mat3d_set_elem(b, 0, 0, 0, 2);
-    intnn_mat3d_self_add(a, b);
-    TEST_ASSERT(intnn_mat3d_get_elem(a, 0, 0, 0) == 3, "self add");
-
     intnn_mat3d_set_elem(a, 0, 0, 1, 4);
+
+    // b = [2, 2]
+    intnn_mat3d_set_elem(b, 0, 0, 0, 2);
     intnn_mat3d_set_elem(b, 0, 0, 1, 2);
-    intnn_mat3d_self_elem_mul(a, b);
-    TEST_ASSERT(intnn_mat3d_get_elem(a, 0, 0, 1) == 8, "self elem mul");
 
-    intnn_mat3d_self_div_const(a, 2);
-    TEST_ASSERT(intnn_mat3d_get_elem(a, 0, 0, 0) == 1, "self div const");
+    intnn_mat3d_self_add(a, b); // a = [3, 6]
+    TEST_ASSERT(intnn_mat3d_get_elem(a, 0, 0, 0) == 3, "self add");
+    TEST_ASSERT(intnn_mat3d_get_elem(a, 0, 0, 1) == 6, "self add");
 
-    intnn_mat3d_set_elem(b, 0, 0, 0, 1);
-    intnn_mat3d_self_elem_div(a, b);
+    intnn_mat3d_self_elem_mul(a, b); // a = [6, 12]
+    TEST_ASSERT(intnn_mat3d_get_elem(a, 0, 0, 0) == 6, "self elem mul");
+    TEST_ASSERT(intnn_mat3d_get_elem(a, 0, 0, 1) == 12, "self elem mul");
+
+    intnn_mat3d_self_div_const(a, 3); // a = [2, 4]
+    TEST_ASSERT(intnn_mat3d_get_elem(a, 0, 0, 0) == 2, "self div const");
+    TEST_ASSERT(intnn_mat3d_get_elem(a, 0, 0, 1) == 4, "self div const");
+
+    intnn_mat3d_set_elem(b, 0, 0, 0, 2);
+    intnn_mat3d_set_elem(b, 0, 0, 1, 2);
+    intnn_mat3d_self_elem_div(a, b); // a = [1, 2]
     TEST_ASSERT(intnn_mat3d_get_elem(a, 0, 0, 0) == 1, "self elem div");
+    TEST_ASSERT(intnn_mat3d_get_elem(a, 0, 0, 1) == 2, "self elem div");
 
     intnn_free_mat3d(a);
     intnn_free_mat3d(b);
