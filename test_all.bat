@@ -14,7 +14,7 @@ REM 编译器
 set CC=gcc
 
 REM 编译选项
-set CFLAGS=-I%INC_DIR% -Wall -Wextra -O2
+set CFLAGS=-I%INC_DIR% -Wall -Wextra -O2 
 
 REM 找到所有源文件（src/*.c），生成源码文件列表（空格分隔）
 set SRC_FILES=
@@ -32,7 +32,7 @@ for %%t in (%TEST_DIR%\*.c) do (
 
     echo 正在编译测试文件：%%t
 
-    %CC% %CFLAGS% -o %TEST_DIR%\!TEST_NAME!.exe %%t !SRC_FILES!
+    %CC% %CFLAGS% -o %TEST_DIR%\!TEST_NAME!.exe %%t !SRC_FILES! -lurlmon
 
     if errorlevel 1 (
         echo 编译失败：!TEST_NAME!
