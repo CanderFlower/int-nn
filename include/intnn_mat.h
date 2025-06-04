@@ -79,6 +79,7 @@ void intnn_self_mul_const(intnn_mat* mat, int val);
 void intnn_self_div_const(intnn_mat* mat, int val);
 void intnn_self_elem_add_const(intnn_mat* mat, int r, int c, int val);
 void intnn_self_add_mat(intnn_mat* mat, const intnn_mat* b);
+void intnn_self_sub_mat(intnn_mat* mat, const intnn_mat* b);
 void intnn_self_mul_mat(intnn_mat* mat, const intnn_mat* b);
 void intnn_self_elem_mul_mat(intnn_mat* mat, const intnn_mat* b);
 void intnn_self_elem_div_mat(intnn_mat* mat, const intnn_mat* b);

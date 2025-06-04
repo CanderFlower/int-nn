@@ -661,6 +661,15 @@ void intnn_self_add_mat(intnn_mat* mat, const intnn_mat* b) {
     }
 }
 
+void intnn_self_sub_mat(intnn_mat* mat, const intnn_mat* b) {
+    if (!dimsEqual(mat, b))
+        return;
+    for (int r = 0; r < mat->mRows; ++r) {
+        for (int c = 0; c < mat->mCols; ++c) {
+            mat->mMat[r][c] -= b->mMat[r][c];
+        }
+    }
+}
 void intnn_self_mul_mat(intnn_mat* mat, const intnn_mat* b) {
     // 矩阵乘法： mat = mat * b
     // 先保存 mat 的副本
