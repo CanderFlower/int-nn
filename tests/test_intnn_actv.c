@@ -106,7 +106,7 @@ void test_sigmoid_2d() {
     // 确保矩阵分配成功
     assert(in != NULL && out != NULL && grad != NULL);
     
-    intnn_sigmoid(out, in, grad, 3); // k=3 即除以8
+    intnn_sigmoid(out, in, grad, 1); // k=3 即除以8
     
     // 使用assert验证结果
     for (int c = 0; c < 13; c++) {
@@ -189,7 +189,7 @@ void test_tanh_2d() {
     // 确保矩阵分配成功
     assert(in != NULL && out != NULL && grad != NULL);
     
-    intnn_tanh(out, in, grad, 3, 1); // k=3, numItems=1
+    intnn_tanh(out, in, grad, 1, 1); // k=3, numItems=1
     
     // 使用assert验证结果
     for (int c = 0; c < 13; c++) {
@@ -415,7 +415,7 @@ void test_sigmoid_3d() {
     // 确保矩阵分配成功
     assert(in != NULL && out != NULL && grad != NULL);
     
-    intnn_sigmoid3d(out, in, grad, 3); // k=3
+    intnn_sigmoid3d(out, in, grad, 1); // k=3
     
     // 验证每个深度层
     for (int d = 0; d < 3; d++) {
