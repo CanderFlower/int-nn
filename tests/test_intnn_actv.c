@@ -6,7 +6,7 @@
 #include "intnn_actv.h"
 #include "intnn_consts.h"
 
-// ====================== è¾…åŠ©å‡½æ•° ======================
+// ====================== ¸¨Öúº¯Êı ======================
 
 void print_test_header(const char* test_name) {
     printf("=======================================\n");
@@ -38,12 +38,12 @@ intnn_mat3d* create_test_matrix3d(int depth, int rows, int cols, int* data) {
     return mat3d;
 }
 
-// ====================== 2D æµ‹è¯•å‡½æ•° ======================
+// ====================== 2D ²âÊÔº¯Êı ======================
 
 void test_sigmoid_2d() {
     print_test_header("2D Sigmoid Activation");
     
-    // æµ‹è¯•æ•°æ®ï¼šè¦†ç›–æ‰€æœ‰åˆ†æ®µ
+    // ²âÊÔÊı¾İ£º¸²¸ÇËùÓĞ·Ö¶Î
     int data[] = {
         -150, -100, -80, -40, -10, 10, 40, 80, 100, 150
     };
@@ -51,16 +51,16 @@ void test_sigmoid_2d() {
         1, 1, 20, 48, 64, 64, 80, 108, 127, 127
     };
     int expected_grad[] = {
-        INT_MAX, 8, 2, 1, 1, 1, 2, 8, INT_MAX, INT_MAX
+        INTNN_MAX, 8, 2, 1, 1, 1, 2, 8, INTNN_MAX, INTNN_MAX
     };
     
     intnn_mat* in = create_test_matrix(2, 5, data);
     intnn_mat* out = intnn_create_mat(2, 5);
     intnn_mat* grad = intnn_create_mat(2, 5);
     
-    intnn_sigmoid(out, in, grad, 3); // k=3 å³é™¤ä»¥8
+    intnn_sigmoid(out, in, grad, 3); // k=3 ¼´³ıÒÔ8
     
-    // ä½¿ç”¨assertéªŒè¯ç»“æœ
+    // Ê¹ÓÃassertÑéÖ¤½á¹û
     for (int r = 0; r < 2; r++) {
         for (int c = 0; c < 5; c++) {
             int idx = r * 5 + c;
@@ -72,7 +72,7 @@ void test_sigmoid_2d() {
         }
     }
     
-    // æ¸…ç†
+    // ÇåÀí
     intnn_free_mat(in);
     intnn_free_mat(out);
     intnn_free_mat(grad);
@@ -83,7 +83,7 @@ void test_sigmoid_2d() {
 void test_tanh_2d() {
     print_test_header("2D Tanh Activation");
     
-    // æµ‹è¯•æ•°æ®ï¼šè¦†ç›–æ‰€æœ‰åˆ†æ®µ
+    // ²âÊÔÊı¾İ£º¸²¸ÇËùÓĞ·Ö¶Î
     int data[] = {
         -150, -100, -80, -40, -10, 10, 40, 80, 100, 150
     };
@@ -91,7 +91,7 @@ void test_tanh_2d() {
         -128, -128, -108, -72, -20, 20, 72, 108, 127, 127
     };
     int expected_grad[] = {
-        INT_MAX, 4, 1, 1, 1, 1, 1, 4, INT_MAX, INT_MAX
+        INTNN_MAX, 4, 1, 1, 1, 1, 1, 4, INTNN_MAX, INTNN_MAX
     };
     
     intnn_mat* in = create_test_matrix(2, 5, data);
@@ -100,7 +100,7 @@ void test_tanh_2d() {
     
     intnn_tanh(out, in, grad, 3, 1); // k=3, numItems=1
     
-    // ä½¿ç”¨assertéªŒè¯ç»“æœ
+    // Ê¹ÓÃassertÑéÖ¤½á¹û
     for (int r = 0; r < 2; r++) {
         for (int c = 0; c < 5; c++) {
             int idx = r * 5 + c;
@@ -112,7 +112,7 @@ void test_tanh_2d() {
         }
     }
     
-    // æ¸…ç†
+    // ÇåÀí
     intnn_free_mat(in);
     intnn_free_mat(out);
     intnn_free_mat(grad);
@@ -123,7 +123,7 @@ void test_tanh_2d() {
 void test_softmax_2d() {
     print_test_header("2D Softmax Activation");
     
-    // æµ‹è¯•æ•°æ®ï¼šåŒ…å«æ­£è´Ÿå€¼
+    // ²âÊÔÊı¾İ£º°üº¬Õı¸ºÖµ
     int data[] = {
         10, 20, 30, 
         -5, 15, 25
@@ -135,29 +135,29 @@ void test_softmax_2d() {
     
     intnn_softmax(out, in, grad, 0);
     
-    // éªŒè¯è¡Œ1ï¼šæ€»å’Œåº”ä¸ºINT_MAX
+    // ÑéÖ¤ĞĞ1£º×ÜºÍÓ¦ÎªINTNN_MAX
     int row0_sum = intnn_sum(out);
-    assert(row0_sum >= INT_MAX - 10 && row0_sum <= INT_MAX);
+    assert(row0_sum >= INTNN_MAX - 10 && row0_sum <= INTNN_MAX);
     
     int row1_sum = 0;
     for (int c = 0; c < 3; c++) {
         row1_sum += intnn_get_elem(out, 1, c);
     }
-    assert(row1_sum >= INT_MAX - 10 && row1_sum <= INT_MAX);
+    assert(row1_sum >= INTNN_MAX - 10 && row1_sum <= INTNN_MAX);
     
-    // æ£€æŸ¥æ¢¯åº¦
+    // ¼ì²éÌİ¶È
     for (int r = 0; r < 2; r++) {
         for (int c = 0; c < 3; c++) {
             int val = intnn_get_elem(in, r, c);
             int grad_val = intnn_get_elem(grad, r, c);
             
             if (val <= 0) {
-                assert(grad_val == INT_MAX);
+                assert(grad_val == INTNN_MAX);
             }
         }
     }
     
-    // æ¸…ç†
+    // ÇåÀí
     intnn_free_mat(in);
     intnn_free_mat(out);
     intnn_free_mat(grad);
@@ -175,7 +175,7 @@ void test_relu_2d() {
         0, 0, 0, 10, 50, 127
     };
     int expected_grad[] = {
-        INT_MAX, INT_MAX, INT_MAX, 1, 1, INT_MAX
+        INTNN_MAX, INTNN_MAX, INTNN_MAX, 1, 1, INTNN_MAX
     };
     
     intnn_mat* in = create_test_matrix(2, 3, data);
@@ -184,7 +184,7 @@ void test_relu_2d() {
     
     intnn_relu8bit(out, in, grad, 0);
     
-    // ä½¿ç”¨assertéªŒè¯ç»“æœ
+    // Ê¹ÓÃassertÑéÖ¤½á¹û
     for (int r = 0; r < 2; r++) {
         for (int c = 0; c < 3; c++) {
             int idx = r * 3 + c;
@@ -196,7 +196,7 @@ void test_relu_2d() {
         }
     }
     
-    // æ¸…ç†
+    // ÇåÀí
     intnn_free_mat(in);
     intnn_free_mat(out);
     intnn_free_mat(grad);
@@ -214,7 +214,7 @@ void test_leaky_relu_2d() {
         -32768, -10, -2, 0, 10, 50, 32767
     };
     int expected_grad[] = {
-        INT_MAX, 5, 5, 1, 1, 1, INT_MAX
+        INTNN_MAX, 5, 5, 1, 1, 1, INTNN_MAX
     };
     
     intnn_mat* in = create_test_matrix(1, 7, data);
@@ -223,7 +223,7 @@ void test_leaky_relu_2d() {
     
     intnn_leakyrelu(out, in, grad, 0);
     
-    // ä½¿ç”¨assertéªŒè¯ç»“æœ
+    // Ê¹ÓÃassertÑéÖ¤½á¹û
     for (int c = 0; c < 7; c++) {
         int actual = intnn_get_elem(out, 0, c);
         int actual_grad = intnn_get_elem(grad, 0, c);
@@ -232,7 +232,7 @@ void test_leaky_relu_2d() {
         assert(actual_grad == expected_grad[c]);
     }
     
-    // æ¸…ç†
+    // ÇåÀí
     intnn_free_mat(in);
     intnn_free_mat(out);
     intnn_free_mat(grad);
@@ -240,21 +240,21 @@ void test_leaky_relu_2d() {
     printf("2D Leaky ReLU: PASSED\n");
 }
 
-// ====================== 3D æµ‹è¯•å‡½æ•° ======================
+// ====================== 3D ²âÊÔº¯Êı ======================
 
 void test_sigmoid_3d() {
     print_test_header("3D Sigmoid Activation");
     
     int data[] = {
-        // æ·±åº¦0
+        // Éî¶È0
         -150, -100, 
         -80, -40,
         
-        // æ·±åº¦1
+        // Éî¶È1
         -10, 10,
         40, 80,
         
-        // æ·±åº¦2
+        // Éî¶È2
         100, 150,
         0, 0
     };
@@ -265,7 +265,7 @@ void test_sigmoid_3d() {
     
     intnn_sigmoid3d(out, in, grad, 3); // k=3
     
-    // éªŒè¯æ¯ä¸ªæ·±åº¦å±‚
+    // ÑéÖ¤Ã¿¸öÉî¶È²ã
     for (int d = 0; d < 3; d++) {
         intnn_mat* layer_out = intnn_mat3d_get_mat_at_depth(out, d);
         intnn_mat* layer_grad = intnn_mat3d_get_mat_at_depth(grad, d);
@@ -276,12 +276,12 @@ void test_sigmoid_3d() {
                 int grad_val = intnn_get_elem(layer_grad, r, c);
                 
                 assert(val >= 1 && val <= INTNN_MAX);
-                assert(grad_val > 0 && grad_val < INT_MAX);
+                assert(grad_val > 0 && grad_val < INTNN_MAX);
             }
         }
     }
     
-    // æ¸…ç†
+    // ÇåÀí
     intnn_free_mat3d(in);
     intnn_free_mat3d(out);
     intnn_free_mat3d(grad);
@@ -293,11 +293,11 @@ void test_activate_3d() {
     print_test_header("3D General Activation");
     
     int data[] = {
-        // æ·±åº¦0
+        // Éî¶È0
         -50, 20,
         10, -30,
         
-        // æ·±åº¦1
+        // Éî¶È1
         0, 100,
         -20, 50
     };
@@ -306,10 +306,10 @@ void test_activate_3d() {
     intnn_mat3d* out = intnn_create_mat3d(2, 2, 2);
     intnn_mat3d* grad = intnn_create_mat3d(2, 2, 2);
     
-    // æµ‹è¯•Tanhæ¿€æ´»
+    // ²âÊÔTanh¼¤»î
     intnn_activate3d(out, in, grad, INTNN_ACTV_TANH, 3, 1);
     
-    // éªŒè¯ç»“æœ
+    // ÑéÖ¤½á¹û
     for (int d = 0; d < 2; d++) {
         intnn_mat* layer_out = intnn_mat3d_get_mat_at_depth(out, d);
         intnn_mat* layer_grad = intnn_mat3d_get_mat_at_depth(grad, d);
@@ -320,12 +320,12 @@ void test_activate_3d() {
                 int grad_val = intnn_get_elem(layer_grad, r, c);
                 
                 assert(val >= INTNN_MIN && val <= INTNN_MAX);
-                assert(grad_val > 0 && grad_val < INT_MAX);
+                assert(grad_val > 0 && grad_val < INTNN_MAX);
             }
         }
     }
     
-    // æ¸…ç†
+    // ÇåÀí
     intnn_free_mat3d(in);
     intnn_free_mat3d(out);
     intnn_free_mat3d(grad);
@@ -333,19 +333,19 @@ void test_activate_3d() {
     printf("3D General Activation: PASSED\n");
 }
 
-// ====================== ä¸»æµ‹è¯•å‡½æ•° ======================
+// ====================== Ö÷²âÊÔº¯Êı ======================
 
 int main() {
     printf("=== Starting Integer Neural Network Activation Tests ===\n\n");
     
-    // æµ‹è¯•2Dæ¿€æ´»å‡½æ•°
+    // ²âÊÔ2D¼¤»îº¯Êı
     test_sigmoid_2d();
     test_tanh_2d();
     test_softmax_2d();
     test_relu_2d();
     test_leaky_relu_2d();
     
-    // æµ‹è¯•3Dæ¿€æ´»å‡½æ•°
+    // ²âÊÔ3D¼¤»îº¯Êı
     test_sigmoid_3d();
     test_activate_3d();
     
