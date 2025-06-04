@@ -272,4 +272,250 @@ void test_softmax_2d() {
     }
     
     // 清理
-    in
+    intnn_free_mat(in);
+    intnn_free_mat(out);
+    intnn_free_mat(grad);
+    
+    printf("2D Softmax: PASSED\n\n");
+}
+
+void test_relu_2d() {
+    print_test_header("2D ReLU Activation");
+    
+    int data[] = {
+        -50, -10, 0, 10, 50, 150
+    };
+    // 正确预期值 (INTNN_MAX = 127)
+    int expected[] = {
+        0, 0, 0, 10, 50, INTNN_MAX
+    };
+    int expected_grad[] = {
+        INTNN_MAX, INTNN_MAX, INTNN_MAX, 1, 1, INTNN_MAX
+    };
+    
+    intnn_mat* in = create_test_matrix(2, 3, data);
+    intnn_mat* out = intnn_create_mat(2, 3);
+    intnn_mat* grad = intnn_create_mat(2, 3);
+    
+    // 确保矩阵分配成功
+    assert(in != NULL && out != NULL && grad != NULL);
+    
+    intnn_relu8bit(out, in, grad, 0);
+    
+    // 使用assert验证结果
+    for (int r = 0; r < 2; r++) {
+        for (int c = 0; c < 3; c++) {
+            int idx = r * 3 + c;
+            int actual = intnn_get_elem(out, r, c);
+            int actual_grad = intnn_get_elem(grad, r, c);
+            
+            assert(actual == expected[idx]);
+            assert(actual_grad == expected_grad[idx]);
+        }
+    }
+    
+    // 清理
+    intnn_free_mat(in);
+    intnn_free_mat(out);
+    intnn_free_mat(grad);
+    
+    printf("2D ReLU: PASSED\n\n");
+}
+
+void test_leaky_relu_2d() {
+    print_test_header("2D Leaky ReLU Activation");
+    
+    int data[] = {
+        SHRT_MIN - 1, // 小于 SHRT_MIN
+        -100, 
+        -50, 
+        -10, 
+        0, 
+        10, 
+        50, 
+        100,
+        SHRT_MAX + 1  // 大于 SHRT_MAX
+    };
+    
+    // 正确预期值
+    int expected[] = {
+        SHRT_MIN,     // 下溢
+        -100/5,       // -20
+        -50/5,        // -10
+        -10/5,        // -2
+        0, 
+        10, 
+        50, 
+        100,
+        SHRT_MAX      // 上溢
+    };
+    
+    // 正确梯度倒数
+    int expected_grad[] = {
+        INTNN_MAX,     // 下溢
+        5, 
+        5, 
+        5, 
+        1, 
+        1, 
+        1, 
+        1,
+        INTNN_MAX      // 上溢
+    };
+    
+    intnn_mat* in = create_test_matrix(1, 9, data);
+    intnn_mat* out = intnn_create_mat(1, 9);
+    intnn_mat* grad = intnn_create_mat(1, 9);
+    
+    // 确保矩阵分配成功
+    assert(in != NULL && out != NULL && grad != NULL);
+    
+    intnn_leakyrelu(out, in, grad, 0);
+    
+    // 使用assert验证结果
+    for (int c = 0; c < 9; c++) {
+        int actual = intnn_get_elem(out, 0, c);
+        int actual_grad = intnn_get_elem(grad, 0, c);
+        
+        assert(actual == expected[c]);
+        assert(actual_grad == expected_grad[c]);
+    }
+    
+    // 清理
+    intnn_free_mat(in);
+    intnn_free_mat(out);
+    intnn_free_mat(grad);
+    
+    printf("2D Leaky ReLU: PASSED\n\n");
+}
+
+// ====================== 3D 测试函数 ======================
+
+void test_sigmoid_3d() {
+    print_test_header("3D Sigmoid Activation");
+    
+    int data[] = {
+        // 深度0
+        -150, -100, 
+        -80, -40,
+        
+        // 深度1
+        -10, 10,
+        40, 80,
+        
+        // 深度2
+        100, INTNN_MAX+1,  // INTNN_MAX+1 = 128
+        0, INTNN_MAX       // INTNN_MAX = 127
+    };
+    
+    intnn_mat3d* in = create_test_matrix3d(3, 2, 2, data);
+    intnn_mat3d* out = intnn_create_mat3d(3, 2, 2);
+    intnn_mat3d* grad = intnn_create_mat3d(3, 2, 2);
+    
+    // 确保矩阵分配成功
+    assert(in != NULL && out != NULL && grad != NULL);
+    
+    intnn_sigmoid3d(out, in, grad, 3); // k=3
+    
+    // 验证每个深度层
+    for (int d = 0; d < 3; d++) {
+        printf("Depth %d:\n", d);
+        for (int r = 0; r < 2; r++) {
+            for (int c = 0; c < 2; c++) {
+                int in_val = intnn_mat3d_get_elem(in, d, r, c);
+                int out_val = intnn_mat3d_get_elem(out, d, r, c);
+                int grad_val = intnn_mat3d_get_elem(grad, d, r, c);
+                
+                printf("  Input: %5d, Output: %5d, Grad: %5d\n", 
+                       in_val, out_val, grad_val);
+                
+                // 验证输出在合理范围
+                assert(out_val >= 1 && out_val <= INTNN_MAX);
+                
+                // 验证梯度倒数是预期值（1, 2, 4, 8 或 INTNN_MAX）
+                assert(grad_val == 1 || grad_val == 2 || grad_val == 4 || 
+                       grad_val == 8 || grad_val == INTNN_MAX);
+            }
+        }
+    }
+    
+    // 清理
+    intnn_free_mat3d(in);
+    intnn_free_mat3d(out);
+    intnn_free_mat3d(grad);
+    
+    printf("3D Sigmoid: PASSED\n\n");
+}
+
+void test_activate_3d() {
+    print_test_header("3D General Activation (Tanh)");
+    
+    int data[] = {
+        // 深度0
+        -50, 20,
+        10, -30,
+        
+        // 深度1
+        0, INTNN_MAX,  // INTNN_MAX = 127
+        -20, INTNN_MAX+1 // INTNN_MAX+1 = 128
+    };
+    
+    intnn_mat3d* in = create_test_matrix3d(2, 2, 2, data);
+    intnn_mat3d* out = intnn_create_mat3d(2, 2, 2);
+    intnn_mat3d* grad = intnn_create_mat3d(2, 2, 2);
+    
+    // 确保矩阵分配成功
+    assert(in != NULL && out != NULL && grad != NULL);
+    
+    // 测试Tanh激活
+    intnn_activate3d(out, in, grad, INTNN_ACTV_TANH, 3, 1);
+    
+    // 验证结果
+    for (int d = 0; d < 2; d++) {
+        printf("Depth %d:\n", d);
+        for (int r = 0; r < 2; r++) {
+            for (int c = 0; c < 2; c++) {
+                int in_val = intnn_mat3d_get_elem(in, d, r, c);
+                int out_val = intnn_mat3d_get_elem(out, d, r, c);
+                int grad_val = intnn_mat3d_get_elem(grad, d, r, c);
+                
+                printf("  Input: %5d, Output: %5d, Grad: %5d\n", 
+                       in_val, out_val, grad_val);
+                
+                // 验证输出在合理范围
+                assert(out_val >= -128 && out_val <= INTNN_MAX);
+                
+                // 验证梯度倒数是预期值（1, 2, 4 或 INTNN_MAX）
+                assert(grad_val == 1 || grad_val == 2 || grad_val == 4 || 
+                       grad_val == INTNN_MAX);
+            }
+        }
+    }
+    
+    // 清理
+    intnn_free_mat3d(in);
+    intnn_free_mat3d(out);
+    intnn_free_mat3d(grad);
+    
+    printf("3D General Activation: PASSED\n\n");
+}
+
+// ====================== 主测试函数 ======================
+
+int main() {
+    printf("=== Starting Integer Neural Network Activation Tests ===\n\n");
+    
+    // 测试2D激活函数
+    test_sigmoid_2d();
+    test_tanh_2d();
+    test_softmax_2d();
+    test_relu_2d();
+    test_leaky_relu_2d();
+    
+    // 测试3D激活函数
+    test_sigmoid_3d();
+    test_activate_3d();
+    
+    printf("\n=== All Tests Passed Successfully! ===\n");
+    return 0;
+}
