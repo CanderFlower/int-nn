@@ -6,6 +6,9 @@
 #include "intnn_actv.h"
 #include "intnn_consts.h"
 
+#ifndef INTNN_MAX
+#define INTNN_MAX 127
+#endif
 // ====================== ¸¨Öúº¯Êý ======================
 
 void print_test_header(const char* test_name) {
