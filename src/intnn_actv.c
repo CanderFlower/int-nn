@@ -72,7 +72,7 @@ void intnn_sigmoid(intnn_mat* matOut, intnn_mat* matIn, intnn_mat* matActvGradIn
     const int yMin = 1;
     const int yMax = INTNN_MAX;
     const int joints[] = {-127, -74, -31, 32, 75, 128};
-    const int slopesInv[] = {INT_MAX, 8, 2, 1, 2, 8, INT_MAX};
+    const int slopesInv[] = {INTNN_MAX, 8, 2, 1, 2, 8, INTNN_MAX};
     const int divisor = 1 << k;
 
     for (int r = 0; r < intnn_rows(matOut); r++) {
@@ -96,7 +96,7 @@ void intnn_sigmoid(intnn_mat* matOut, intnn_mat* matIn, intnn_mat* matActvGradIn
 
 void intnn_tanh(intnn_mat* matOut, intnn_mat* matIn, intnn_mat* matActvGradInv, int k, int numItems) {
     const int joints[] = {-127, -74, -31, 32, 75, 128};
-    const int slopesInv[] = {INT_MAX, 4, 1, 2, 1, 4, INT_MAX};  // Fixed slope inverses
+    const int slopesInv[] = {INTNN_MAX, 4, 1, 2, 1, 4, INTNN_MAX};  // Fixed slope inverses
     const int divisor = (1 << k) * numItems;
 
     for (int r = 0; r < intnn_rows(matOut); r++) {
@@ -145,7 +145,7 @@ void intnn_softmax(intnn_mat* matOut, intnn_mat* matIn, intnn_mat* matActvGradIn
         }
 
         rowSum = (rowSum == 0) ? 1 : rowSum;  // Avoid division by zero
-        const int scaleFactor = INT_MAX / rowSum;
+        const int scaleFactor = INTNN_MAX / rowSum;
         
         // Second pass: rescale values
         for (int c = 0; c < intnn_cols(matOut); c++) {
@@ -153,7 +153,7 @@ void intnn_softmax(intnn_mat* matOut, intnn_mat* matIn, intnn_mat* matActvGradIn
             int newVal = (current == 0) ? 0 : current * scaleFactor;
             
             intnn_set_elem(matOut, r, c, newVal);
-            intnn_set_elem(matActvGradInv, r, c, (current == 0) ? INT_MAX : 1);
+            intnn_set_elem(matActvGradInv, r, c, (current == 0) ? INTNN_MAX : 1);
         }
     }
 }
@@ -163,7 +163,7 @@ void intnn_relu8bit(intnn_mat* matOut, intnn_mat* matIn, intnn_mat* matActvGradI
         for (int c = 0; c < intnn_cols(matOut); c++) {
             int val = intnn_get_elem(matIn, r, c);
             int clamped = clamp(val, 0, INTNN_MAX);
-            int grad = (val < 0 || val > INTNN_MAX) ? INT_MAX : 1;
+            int grad = (val < 0 || val > INTNN_MAX) ? INTNN_MAX : 1;
             
             intnn_set_elem(matOut, r, c, clamped);
             intnn_set_elem(matActvGradInv, r, c, grad);
@@ -179,10 +179,10 @@ void intnn_leakyrelu(intnn_mat* matOut, intnn_mat* matIn, intnn_mat* matActvGrad
             int val = intnn_get_elem(matIn, r, c);
             int y, grad;
             
-            if (val < SHRT_MIN)      { y = SHRT_MIN; grad = INT_MAX; }
+            if (val < SHRT_MIN)      { y = SHRT_MIN; grad = INTNN_MAX; }
             else if (val < 0)        { y = val / leakSlope; grad = leakSlope; }
             else if (val < SHRT_MAX) { y = val; grad = 1; }
-            else                     { y = SHRT_MAX; grad = INT_MAX; }
+            else                     { y = SHRT_MAX; grad = INTNN_MAX; }
             
             intnn_set_elem(matOut, r, c, y);
             intnn_set_elem(matActvGradInv, r, c, grad);
