@@ -99,7 +99,7 @@ void intnn_sigmoid(intnn_mat* matOut, intnn_mat* matIn, intnn_mat* matActvGradIn
 
 void intnn_tanh(intnn_mat* matOut, intnn_mat* matIn, intnn_mat* matActvGradInv, int k, int numItems) {
     const int joints[] = {-127, -74, -31, 32, 75, 128};
-    const int slopesInv[] = {INTNN_MAX, 4, 1, 2, 1, 4, INTNN_MAX};  // Fixed slope inverses
+    const int slopesInv[] = {INTNN_MAX, 8, 2, 1, 2, 8, INTNN_MAX};  // Fixed slope inverses
     const int divisor = (1 << k) * numItems;
 
     /*printf("matIn in tahn:\n");

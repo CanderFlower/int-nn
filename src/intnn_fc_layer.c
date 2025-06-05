@@ -234,6 +234,15 @@ void intnn_fc_backward(intnn_fc_layer* layer,
         intnn_free_mat(allOneMat); // 释放临时矩阵
     }
 
+	printf("Size: %d, %d\n", layer->mWeight->mRows, layer->mWeight->mCols);
+    printf("Weight:\n");
+    for (int i = 0; i < 10; i++, printf("\n"))
+        for (int j = 0; j < 10; j++)
+            printf("%d ", layer->mWeight->mMat[i][j]);
+    printf("Bias:\n");
+	for (int i = 0; i < 10; i++, printf("\n"))
+		printf("%d ", layer->mBias->mMat[0][i]);
+
     intnn_free_mat(prevOutputTranspose); // 释放转置矩阵
 
     intnn_clamp_mat(layer->mWeight, -32767, 32767); // 限制权重范围

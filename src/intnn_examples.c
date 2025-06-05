@@ -18,7 +18,7 @@ int example_intnn_fc_dfa_mnist() {
     const int dim2 = 50;
     const int epochs = 3;
     const int miniBatchSize = 20;
-    int lrInv = 1000;
+    int lrInv = 100;
 
     srand((unsigned int)time(NULL));
 
@@ -51,12 +51,13 @@ int example_intnn_fc_dfa_mnist() {
     intnn_fc_use_dfa(fc1, true);
     intnn_fc_use_dfa(fc2, true);
     intnn_fc_use_dfa(fc3, true);
-    intnn_fc_set_random_weight(fc1);
-    intnn_fc_set_random_weight(fc2);
-    intnn_fc_set_random_weight(fc3);
-    intnn_fc_set_random_bias(fc1);
-    intnn_fc_set_random_bias(fc2);
-    intnn_fc_set_random_bias(fc3);
+
+	fc1->mWeight = intnn_create_mat(dimInput, dim1);
+	fc2->mWeight = intnn_create_mat(dim1, dim2);
+	fc3->mWeight = intnn_create_mat(dim2, numClasses);
+	fc1->mBias = intnn_create_mat(1, dim1);
+	fc2->mBias = intnn_create_mat(1, dim2);
+	fc3->mBias = intnn_create_mat(1, numClasses);
 
     fc1->mNext = fc2;
     fc2->mPrev = fc1;
