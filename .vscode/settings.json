@@ -3,6 +3,11 @@
         "*.shader": "shaderlab",
         "intnn_tools.h": "c",
         "stdio.h": "c",
-        "intnn_consts.h": "c"
+        "intnn_consts.h": "c",
+        "intnn_actv.h": "c",
+        "intnn_mat.h": "c",
+        "intnn_fc_layer.h": "c",
+        "intnn_examples.h": "c",
+        "stdbool.h": "c"
     }
 }

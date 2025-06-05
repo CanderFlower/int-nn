@@ -24,39 +24,39 @@ bool intnn_file_exists(const char* filename) {
     return false;
 }
 
-void intnn_download_dataset(intnn_dataset_type dataset) {
-    (void)dataset;
-    // 目前只针对 diabetes 数据集做下载示例
-    const char* fileName = "dataset/diabetes.tab.txt";
-    if (intnn_file_exists(fileName)) {
-        printf("File already exists: %s\n", fileName);
-        return;
-    }
-#ifdef _WIN32
-    // Windows 下调用 URLDownloadToFileA
-    HRESULT hr = URLDownloadToFileA(
-        NULL,
-        "https://www4.stat.ncsu.edu/~boos/var.select/diabetes.tab.txt",
-        "dataset/diabetes.tab.txt",
-        0,
-        NULL
-    );
-    if (hr != S_OK) {
-        printf("Failed to download %s\n", fileName);
-    }
-#else
-    // Linux/Unix 下调用 curl（需要系统已安装 curl）
-    char cmd[512];
-    // 确保 dataset 目录存在
-    snprintf(cmd, sizeof(cmd),
-             "mkdir -p dataset && curl -L -o dataset/diabetes.tab.txt "
-             "https://www4.stat.ncsu.edu/~boos/var.select/diabetes.tab.txt");
-    int ret = system(cmd);
-    if (ret != 0) {
-        printf("Failed to download %s via curl\n", fileName);
-    }
-#endif
-}
+// void intnn_download_dataset(intnn_dataset_type dataset) {
+//     (void)dataset;
+//     // 目前只针对 diabetes 数据集做下载示例
+//     const char* fileName = "dataset/diabetes.tab.txt";
+//     if (intnn_file_exists(fileName)) {
+//         printf("File already exists: %s\n", fileName);
+//         return;
+//     }
+// #ifdef _WIN32
+//     // Windows 下调用 URLDownloadToFileA
+//     HRESULT hr = URLDownloadToFileA(
+//         NULL,
+//         "https://www4.stat.ncsu.edu/~boos/var.select/diabetes.tab.txt",
+//         "dataset/diabetes.tab.txt",
+//         0,
+//         NULL
+//     );
+//     if (hr != S_OK) {
+//         printf("Failed to download %s\n", fileName);
+//     }
+// #else
+//     // Linux/Unix 下调用 curl（需要系统已安装 curl）
+//     char cmd[512];
+//     // 确保 dataset 目录存在
+//     snprintf(cmd, sizeof(cmd),
+//              "mkdir -p dataset && curl -L -o dataset/diabetes.tab.txt "
+//              "https://www4.stat.ncsu.edu/~boos/var.select/diabetes.tab.txt");
+//     int ret = system(cmd);
+//     if (ret != 0) {
+//         printf("Failed to download %s via curl\n", fileName);
+//     }
+// #endif
+// }
 
 int intnn_reverse_int(int i) {
     uint32_t v = (uint32_t)i;
@@ -220,6 +220,8 @@ static void intnn_load_idx3_images(intnn_mat* outMat, const char* filepath, int 
         }
     }
     fclose(fp);
+
+    printf("Loaded %d images from %s\n", numToLoad, filepath);
 }
 
 void intnn_load_mnist_images(intnn_mat* outMat, int numImagesToLoad, bool isTrain) {
@@ -263,6 +265,8 @@ static void intnn_load_idx1_labels(intnn_mat* outMat, const char* filepath, int 
         intnn_set_elem(outMat, i, 0, (int)label);
     }
     fclose(fp);
+
+    printf("Loaded %d labels from %s\n", numToLoad, filepath);
 }
 
 void intnn_load_mnist_labels(intnn_mat* outMat, int numLabelsToLoad, bool isTrain) {

@@ -33,7 +33,10 @@ static int clamp(int input, int minVal, int maxVal) {
 void intnn_activate(intnn_mat* matOut, intnn_mat* matIn, intnn_mat* matActvGradInv,
                     intnn_actv_type actv, int k, int numItems) {
     // Reset output if dimensions mismatch
+    
+
     if (!intnn_dims_equal(matOut, matIn)) {
+
         intnn_reset_zero(matOut, intnn_rows(matIn), intnn_cols(matIn));
     }
     
@@ -99,8 +102,11 @@ void intnn_tanh(intnn_mat* matOut, intnn_mat* matIn, intnn_mat* matActvGradInv, 
     const int slopesInv[] = {INTNN_MAX, 4, 1, 2, 1, 4, INTNN_MAX};  // Fixed slope inverses
     const int divisor = (1 << k) * numItems;
 
-    for (int r = 0; r < intnn_rows(matOut); r++) {
-        for (int c = 0; c < intnn_cols(matOut); c++) {
+    /*printf("matIn in tahn:\n");
+    intnn_print_mat(matIn);*/
+
+    for (int r = 0; r < matOut->mRows; r++) {
+        for (int c = 0; c < matOut->mCols; c++) {
             int x = intnn_get_elem(matIn, r, c) / divisor;
             int y, grad;
             
@@ -111,11 +117,16 @@ void intnn_tanh(intnn_mat* matOut, intnn_mat* matIn, intnn_mat* matActvGradInv, 
             else if (x < joints[4])  { y = x + 32; grad = slopesInv[4]; }
             else if (x < joints[5])  { y = x/4 + 88; grad = slopesInv[5]; }
             else                     { y = INTNN_MAX; grad = slopesInv[6]; }
+
+            //printf("@%d, %d\n", x, y);
             
             intnn_set_elem(matOut, r, c, clamp(y, INTNN_MIN, INTNN_MAX));
             intnn_set_elem(matActvGradInv, r, c, grad);
         }
     }
+
+    //printf("output in tanh:\n");
+    //intnn_print_mat(matOut);
 }
 
 void intnn_rescale(intnn_mat* matOut, intnn_mat* matIn, intnn_mat* matActvGradInv, int k) {

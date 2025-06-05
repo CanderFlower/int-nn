@@ -1,0 +1,155 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include "intnn_examples.h"
+#include "intnn_fc_layer.h"
+#include "intnn_mat.h"
+#include "intnn_consts.h"
+#include "intnn_actv.h"
+#include "intnn_tools.h"
+
+int example_intnn_fc_dfa_mnist() {
+    const int numTrain = 60000;
+    const int numTest = 10000;
+    const int numClasses = 10;
+    const int dimInput = 28 * 28;
+    const int dim1 = 100;
+    const int dim2 = 50;
+    const int epochs = 3;
+    const int miniBatchSize = 20;
+    int lrInv = 1000;
+
+    srand((unsigned int)time(NULL));
+
+    // 加载数据
+    intnn_mat* trainImages = intnn_create_mat(numTrain, dimInput);
+    intnn_mat* trainLabels = intnn_create_mat(numTrain, 1);
+    intnn_mat* testImages = intnn_create_mat(numTest, dimInput);
+    intnn_mat* testLabels = intnn_create_mat(numTest, 1);
+    intnn_load_mnist_images(trainImages, numTrain, true);
+    intnn_load_mnist_labels(trainLabels, numTrain, true);
+    intnn_load_mnist_images(testImages, numTest, false);
+    intnn_load_mnist_labels(testLabels, numTest, false);
+    printf("Loaded MNIST train/test samples.\n");
+
+    // 构造 One-hot 目标
+    intnn_mat* trainTarget = intnn_create_mat(numTrain, numClasses);
+    intnn_mat* testTarget = intnn_create_mat(numTest, numClasses);
+    for (int i = 0; i < numTrain; ++i)
+        trainTarget->mMat[i][trainLabels->mMat[i][0]] = INTNN_UNSIGNED_4BIT_MAX;
+    for (int i = 0; i < numTest; ++i)
+        testTarget->mMat[i][testLabels->mMat[i][0]] = INTNN_UNSIGNED_4BIT_MAX;
+
+    // 创建训练用层
+    intnn_fc_layer* fc1 = intnn_fc_create(dimInput, dim1);
+    intnn_fc_layer* fc2 = intnn_fc_create(dim1, dim2);
+    intnn_fc_layer* fc3 = intnn_fc_create(dim2, numClasses);
+    intnn_fc_set_actv(fc1, INTNN_ACTV_TANH);
+    intnn_fc_set_actv(fc2, INTNN_ACTV_TANH);
+    intnn_fc_set_actv(fc3, INTNN_ACTV_TANH);
+    intnn_fc_use_dfa(fc1, true);
+    intnn_fc_use_dfa(fc2, true);
+    intnn_fc_use_dfa(fc3, true);
+    intnn_fc_set_random_weight(fc1);
+    intnn_fc_set_random_weight(fc2);
+    intnn_fc_set_random_weight(fc3);
+    intnn_fc_set_random_bias(fc1);
+    intnn_fc_set_random_bias(fc2);
+    intnn_fc_set_random_bias(fc3);
+
+    fc1->mNext = fc2;
+    fc2->mPrev = fc1;
+    fc2->mNext = fc3;
+    fc3->mPrev = fc2;
+    fc3->mNext = NULL; // 最后一层没有下一层
+    fc1->mPrev = NULL; // 第一层没有前一层
+
+    // 创建测试用层（结构一致，但参数待复制）
+    intnn_fc_layer* fc1_test = intnn_fc_create(dimInput, dim1);
+    intnn_fc_layer* fc2_test = intnn_fc_create(dim1, dim2);
+    intnn_fc_layer* fc3_test = intnn_fc_create(dim2, numClasses);
+    intnn_fc_set_actv(fc1_test, INTNN_ACTV_TANH);
+    intnn_fc_set_actv(fc2_test, INTNN_ACTV_TANH);
+    intnn_fc_set_actv(fc3_test, INTNN_ACTV_TANH);
+
+    fc1_test->mNext = fc2_test;
+    fc2_test->mNext = fc3_test;
+    fc3_test->mPrev = fc2_test;
+    fc2_test->mPrev = fc1_test;
+    fc3->mNext = NULL;
+    fc1->mPrev = NULL;
+
+    int correct;
+
+    //// 初始化前向精度（训练用）
+    //intnn_fc_forward(fc1, trainImages);
+    //intnn_fc_forward(fc2, intnn_fc_get_output(fc1));
+    //intnn_fc_forward(fc3, intnn_fc_get_output(fc2));
+    //correct = intnn_count_max_match(intnn_fc_get_output(fc3), trainTarget);
+    //printf("Initial training correct: %d / %d\n", correct, numTrain);
+
+    //// 拷贝参数 -> 测试前向
+    //intnn_fc_copy_weights(fc1, fc1_test);
+    //intnn_fc_copy_weights(fc2, fc2_test);
+    //intnn_fc_copy_weights(fc3, fc3_test);
+    //intnn_fc_forward(fc1_test, testImages);
+    //intnn_fc_forward(fc2_test, intnn_fc_get_output(fc1_test));
+    //intnn_fc_forward(fc3_test, intnn_fc_get_output(fc2_test));
+    //correct = intnn_count_max_match(intnn_fc_get_output(fc3_test), testTarget);
+    //printf("Initial test correct: %d / %d\n", correct, numTest);
+
+    // 训练过程
+    int* indices = malloc(sizeof(int) * numTrain);
+    for (int i = 0; i < numTrain; ++i) indices[i] = i;
+
+    intnn_mat* miniX = intnn_create_mat(miniBatchSize, dimInput);
+    intnn_mat* miniY = intnn_create_mat(miniBatchSize, numClasses);
+    intnn_mat* lossMat = intnn_create_mat(miniBatchSize, numClasses);
+    intnn_mat* deltaMat = intnn_create_mat(miniBatchSize, numClasses);
+    printf("Epoch,TrainLoss,TrainAcc,TestAcc\n");
+
+    for (int ep = 1; ep <= epochs; ++ep) {
+        intnn_tools_shuffle_indices(indices, numTrain);
+        int totalCorrect = 0;
+        int totalLoss = 0;
+
+        for (int i = 0; i < numTrain / miniBatchSize; ++i) {
+            intnn_indexed_slice_of(miniX, trainImages, indices, i * miniBatchSize, (i + 1) * miniBatchSize);
+
+            intnn_fc_forward(fc1, miniX);
+            int aa = 0;
+            intnn_indexed_slice_of(miniY, trainTarget, indices, i * miniBatchSize, (i + 1) * miniBatchSize);
+            totalLoss += intnn_batch_l2_loss(lossMat, miniY, intnn_fc_get_output(fc3));
+            intnn_batch_l2_loss_delta(deltaMat, miniY, intnn_fc_get_output(fc3));
+            totalCorrect += intnn_count_max_match(intnn_fc_get_output(fc3), miniY);
+
+            intnn_fc_backward(fc3, deltaMat, lrInv);
+        }
+
+        // 更新测试层参数并前向
+        intnn_fc_copy_weights(fc1, fc1_test);
+        intnn_fc_copy_weights(fc2, fc2_test);
+        intnn_fc_copy_weights(fc3, fc3_test);
+        intnn_fc_forward(fc1_test, testImages);
+        int testCorrect = intnn_count_max_match(intnn_fc_get_output(fc3_test), testTarget);
+
+        printf("%d,%d,%.3f,%.3f\n", ep, totalLoss,
+            totalCorrect * 1.0 / numTrain,
+            testCorrect * 1.0 / numTest);
+
+        if ((ep % 10 == 0) && lrInv < 20000) lrInv *= 2;
+    }
+
+    // 释放所有资源
+    intnn_fc_free(fc1);        intnn_fc_free(fc1_test);
+    intnn_fc_free(fc2);        intnn_fc_free(fc2_test);
+    intnn_fc_free(fc3);        intnn_fc_free(fc3_test);
+    intnn_free_mat(trainImages); intnn_free_mat(trainLabels);
+    intnn_free_mat(testImages);  intnn_free_mat(testLabels);
+    intnn_free_mat(trainTarget); intnn_free_mat(testTarget);
+    intnn_free_mat(miniX);       intnn_free_mat(miniY);
+    intnn_free_mat(lossMat);     intnn_free_mat(deltaMat);
+    free(indices);
+    return 0;
+}

@@ -3,7 +3,7 @@
 
 #include <stdlib.h>  // for rand
 #include <assert.h>  // for assert
-
+#include "intnn_mat.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,6 +17,7 @@ int intnn_floor_sqrt(int x);
 int intnn_int_round_log(int base, int x, int x_shift, int y_shift, int get_closest);
 int intnn_approx_log(int base, int x, int get_closest);
 int intnn_round_to_unit(int n, int unit);
+void intnn_tools_shuffle_indices(int* indices, int size);
 
 #ifdef __cplusplus
 }

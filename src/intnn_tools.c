@@ -1,5 +1,4 @@
 #include "intnn_tools.h"
-#include "intnn_consts.h"
 
 int intnn_max(int a, int b) {
     return a > b ? a : b;
@@ -72,4 +71,13 @@ int intnn_round_to_unit(int n, int unit) {
     int a = (n / unit) * unit;
     int b = a + unit;
     return (n - a > b - n) ? b : a;
+}
+
+void intnn_tools_shuffle_indices(int* indices, int size) {
+    for (int i = size - 1; i > 0; --i) {
+        int j = intnn_random_range(0, i);
+        int temp = indices[i];
+        indices[i] = indices[j];
+        indices[j] = temp;
+    }
 }

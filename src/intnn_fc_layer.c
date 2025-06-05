@@ -62,6 +62,9 @@ intnn_fc_layer* intnn_fc_create(int inDim, int outDim) {
     // 名称指针指向空，调用 set_name 可自行分配
     layer->mName = NULL;
 
+	layer->mNext = NULL; // 下一层指针
+	layer->mPrev = NULL; // 前一层指针
+
     return layer;
 }
 
@@ -129,133 +132,118 @@ void intnn_fc_free(intnn_fc_layer* layer) {
 
 void intnn_fc_forward(intnn_fc_layer* layer, intnn_mat* x) {
     assert(layer != NULL && x != NULL);
-    layer->mInput = x;
+    
+    layer->mInput = intnn_copy_mat(x);
 
-    // 1) 确保 mInter 已经分配
-    if (!layer->mInter) {
-        layer->mInter = intnn_create_mat(x->mRows, layer->mOutDim);
-    }
+    if (layer->mInter) intnn_free_mat(layer->mInter);
+    layer->mInter = intnn_create_mat(x->mRows, layer->mWeight->mCols);
+    intnn_mat_mul_mat(layer->mInter, x, layer->mWeight); // (N, D(k)) = (N, D(k-1)) × (D(k-1), D(k)) 
+    
+    if(layer->mUseBn){
+        assert(0); // 不支持
+    }else{
+        intnn_self_add_mat(layer->mInter, layer->mBias); // (N, D(k)) += (1, D(k)) => (N, D(k))
 
-    // 2) 确保 mOutput 和 mActvGradInv 已经分配
-    if (!layer->mOutput) {
-        layer->mOutput = intnn_create_mat(x->mRows, layer->mOutDim);
-    }
-    if (!layer->mActvGradInv) {
-        layer->mActvGradInv = intnn_create_mat(x->mRows, layer->mOutDim);
-    }
+        if (layer->mOutput) intnn_free_mat(layer->mOutput);
+        layer->mOutput = intnn_create_mat(layer->mInter->mRows, layer->mInter->mCols);
 
-    // mInter = x · W
-    intnn_mat_mul_mat(layer->mInter, x, layer->mWeight);
+        if (layer->mActvGradInv) intnn_free_mat(layer->mActvGradInv);
+        layer->mActvGradInv = intnn_create_mat(layer->mInter->mRows, layer->mInter->mCols);
 
-    if (layer->mUseBn) {
-        // Calculate mean and variance (column-wise)
-        intnn_average_colwise(layer->mMean);
-        int avg = intnn_average(layer->mInter);
-        intnn_variance_with_avg(layer->mVariance, avg);
-
-        // stdev = sqrt(variance + epsilon)
-        intnn_square_root_of(layer->mStdevWithEps, layer->mVariance);
-
-        // standardized = (x - mean) / stdev
-        intnn_standardize(layer->mStandardized, 3, SHRT_MIN, SHRT_MAX);
-
-        // batchNorm = standardized * gamma + beta
-        intnn_self_elem_mul_mat(layer->mBatchNormalized, layer->mGamma);
-        intnn_self_add_mat(layer->mBatchNormalized, layer->mBeta);
-
-        // activation(mBatchNormalized)
-        intnn_activate(layer->mOutput, layer->mBatchNormalized,
-                       layer->mActvGradInv, layer->mActv, layer->mOutput->mRows,
-                       layer->mOutput->mCols);
-    } else {
-        // mInter += B
-        intnn_self_add_mat(layer->mInter, layer->mBias);
-
-        // 如果是“AS_IS”激活，需要让 mActvGradInv 全置为 1：
-        if (layer->mActv == INTNN_ACTV_AS_IS) {
-            // 把整个 (batchSize × outDim) 矩阵填 1
-            intnn_set_all_constant(layer->mActvGradInv, 1);
-        }
-
-        // activation(mInter)
         intnn_activate(layer->mOutput, layer->mInter, layer->mActvGradInv,
-                       layer->mActv, layer->mOutput->mRows,
-                       layer->mOutput->mCols);
+            layer->mActv, INTNN_K_BIT, x->mRows); // (N, D(k)) = activation((N, D(k)))
+    }
+
+    if(layer->mNext != NULL){
+        intnn_fc_forward(layer->mNext, layer->mOutput); // 递归调用下一层
     }
 }
+
 void intnn_fc_backward(intnn_fc_layer* layer,
-                       intnn_mat* lastDeltas,
-                       int lrInv) {
-    assert(layer != NULL && lastDeltas != NULL);
-    if (lrInv <= 0)
-        lrInv = 1;
-
-    int batchSize = lastDeltas->mRows;
-    int outDim = layer->mOutDim;
-    int inDim = layer->mInDim;
-
-    // 1. 确保 mDeltas 已分配：(batchSize, outDim)
-    if (!layer->mDeltas) {
-        layer->mDeltas = intnn_create_mat(batchSize, outDim);
+    intnn_mat* lastDeltas,
+    int lrInv) {
+     // COMPUTE DELTAS
+    
+    if(layer->mUseBn) {
+        assert(0); // 不支持
     }
 
-    // 2. 确保 mActvGradInv 已分配：(batchSize, outDim)
-    if (!layer->mActvGradInv) {
-        layer->mActvGradInv = intnn_create_mat(batchSize, outDim);
+    if(layer->mNext == NULL){
+        if (layer->mDeltas) intnn_free_mat(layer->mDeltas);
+        layer->mDeltas = intnn_create_mat(lastDeltas->mRows, lastDeltas->mCols);
+
+        intnn_mat_elem_div_mat(layer->mDeltas, lastDeltas, layer->mActvGradInv); // (N, D(k)) = (N, D(k)) / (1, D(k))
+    }
+    if(!layer->mUseDfa){
+        assert(0); // 不支持
+    }else{
+        if (!layer->mDfaWeight) {
+            int range = intnn_floor_sqrt((12 * SHRT_MAX) / (layer->mInDim + layer->mOutDim));
+            layer->mDfaWeight = intnn_create_mat(lastDeltas->mCols, layer->mWeight->mCols);
+            intnn_set_random(layer->mDfaWeight, false, -range, range);
+            printf("DMA initialized!\n");
+        }
+        if (layer->mDeltas) intnn_free_mat(layer->mDeltas);
+        layer->mDeltas = intnn_create_mat(lastDeltas->mRows, layer->mDfaWeight->mCols);
+        intnn_mat_mul_mat(layer->mDeltas, lastDeltas, layer->mDfaWeight); // (N, D(k)) = (N, D(k-1)) × (D(k-1), D(k))
+        intnn_self_elem_div_mat(layer->mDeltas, layer->mActvGradInv); // (N, D(k)) = (N, D(k)) / (1, D(k))
+    }
+    
+    if (layer->mDeltasTranspose) intnn_free_mat(layer->mDeltasTranspose);
+    layer->mDeltasTranspose = intnn_create_mat(layer->mDeltas->mCols, layer->mDeltas->mRows);
+
+    intnn_transpose_of(layer->mDeltasTranspose, layer->mDeltas); // (D(k), N) = (N, D(k))
+
+    // AFTER COMPUTE DELTAS
+
+    int batchSize = layer->mDeltas->mRows;
+
+    intnn_mat* prevOutputTranspose;
+    if(layer->mPrev != NULL) {
+        prevOutputTranspose = intnn_create_mat(layer->mPrev->mOutput->mCols, layer->mPrev->mOutput->mRows);
+        intnn_transpose_of(prevOutputTranspose, layer->mPrev->mOutput); // (D(k-1), N) = (N, D(k-1))
+    } else {
+        prevOutputTranspose = intnn_create_mat(layer->mInput->mCols, layer->mInput->mRows);
+        intnn_transpose_of(prevOutputTranspose, layer->mInput); // (D(k-1), N) = (N, D(k-1))
     }
 
-    // 3. 计算 mDeltas = lastDeltas ⊙ mActvGradInv
-    intnn_mat_elem_mul_mat(layer->mDeltas, lastDeltas, layer->mActvGradInv);
+    //intnn_print_mat(layer->mDeltas);
 
+    if (!layer->mWeightUpdate) layer->mWeightUpdate = intnn_create_mat(layer->mInDim, layer->mOutDim);
+    intnn_reset_zero(layer->mWeightUpdate, layer->mInDim, layer->mOutDim); // 重置权重更新矩阵
+    intnn_mat_mul_mat(layer->mWeightUpdate, prevOutputTranspose, layer->mDeltas); // (D(k-1), D(k)) = (D(k-1), N) × (N, D(k))
 
-    // 4. 计算输入 X 的转置（shape = (inDim, batchSize)），用于后续权重更新
-    //    用一个局部矩阵来存储，不要复用 mDeltasTranspose
-    intnn_mat* inputT = intnn_create_mat(inDim, batchSize);
-    intnn_transpose_of(inputT, layer->mInput);
+    intnn_self_div_const(layer->mWeightUpdate, -lrInv); // (D(k-1), D(k)) /= -lrInv
+    intnn_self_add_mat(layer->mWeight, layer->mWeightUpdate); // (D(k-1), D(k)) += (D(k-1), D(k))
 
-    // 5. 计算 weightUpdate = inputT · mDeltas
-    if (!layer->mWeightUpdate) {
-        layer->mWeightUpdate = intnn_create_mat(inDim, outDim);
+    //intnn_print_mat(layer->mWeightUpdate);
+
+    if(layer->mUseBn){
+        assert(0);
+    }else{
+        intnn_mat* allOneMat = intnn_create_mat(1, batchSize);
+        intnn_reset_all_ones(allOneMat, 1, batchSize); // (1, N) = (1, N)
+
+        if (layer->mBiasUpdate) intnn_free_mat(layer->mBiasUpdate);
+        layer->mBiasUpdate = intnn_create_mat(allOneMat->mRows, layer->mDeltas->mCols);
+        intnn_mat_mul_mat(layer->mBiasUpdate, allOneMat, layer->mDeltas); // (1, D(k)) = (1, N) × (N, D(k))
+        intnn_self_div_const(layer->mBiasUpdate, -lrInv); // (1, D(k)) /= -lrInv
+
+        if (!layer->mBias) layer->mBias = intnn_create_mat(layer->mBiasUpdate->mRows, layer->mBiasUpdate->mCols);
+        intnn_self_add_mat(layer->mBias, layer->mBiasUpdate); // (1, D(k)) += (1, D(k))
+        intnn_free_mat(allOneMat); // 释放临时矩阵
     }
-    intnn_mat_mul_mat(layer->mWeightUpdate, inputT, layer->mDeltas);
-    intnn_self_div_const(layer->mWeightUpdate, lrInv);
-    intnn_self_sub_mat(layer->mWeight, layer->mWeightUpdate);
 
-    // 6. 计算 biasUpdate = [1×N] · mDeltas
-    //    —— 不要用局部 struct，而要动态创建一个矩阵
-    intnn_mat* allOneRow = intnn_create_mat(1, batchSize);
-    intnn_set_all_constant(allOneRow, 1);  // 填充全 1
+    intnn_free_mat(prevOutputTranspose); // 释放转置矩阵
 
+    intnn_clamp_mat(layer->mWeight, -32767, 32767); // 限制权重范围
+    intnn_clamp_mat(layer->mBias, -32767, 32767); // 限制偏置范围
 
-    if (!layer->mBiasUpdate) {
-        layer->mBiasUpdate = intnn_create_mat(1, outDim);
+    if(layer->mPrev != NULL){
+        intnn_fc_backward(layer->mPrev, lastDeltas, lrInv); // 递归调用上一层
     }
-    intnn_mat_mul_mat(layer->mBiasUpdate, allOneRow,
-                      layer->mDeltas);  // (1, outDim)
-
-    intnn_self_div_const(layer->mBiasUpdate, lrInv);
-    intnn_self_sub_mat(layer->mBias, layer->mBiasUpdate);
-
-    // 释放临时矩阵
-    intnn_free_mat(allOneRow);
-
-
-    // 7. 限制 weight, bias 范围
-    intnn_clamp_mat(layer->mWeight, SHRT_MIN + 1, SHRT_MAX);
-    intnn_clamp_mat(layer->mBias, SHRT_MIN + 1, SHRT_MAX);
-
-
-    // 8. 计算 mDeltasTranspose = transpose(mDeltas)
-    //    先分配 (outDim, batchSize)，再转置
-    if (!layer->mDeltasTranspose) {
-        layer->mDeltasTranspose = intnn_create_mat(outDim, batchSize);
-    }
-    intnn_transpose_of(layer->mDeltasTranspose, layer->mDeltas);
-
-
-    // 9. 释放掉临时的 inputT
-    intnn_free_mat(inputT);
 }
+
 
 intnn_mat* intnn_fc_get_output(intnn_fc_layer* layer) {
     assert(layer != NULL);
@@ -364,4 +352,9 @@ void intnn_fc_print_output(intnn_fc_layer* layer, FILE* out) {
     if (!layer || !layer->mOutput)
         return;
     intnn_print_mat(layer->mOutput);
+}
+
+void intnn_fc_copy_weights(intnn_fc_layer* dest, const intnn_fc_layer* src) {
+    dest->mWeight = intnn_copy_mat(src->mWeight);
+    dest->mBias = intnn_copy_mat(src->mBias);
 }

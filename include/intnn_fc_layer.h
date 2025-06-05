@@ -12,7 +12,11 @@
 extern "C" {
 #endif
 
-typedef struct {
+
+typedef struct intnn_fc_layer intnn_fc_layer;
+
+
+struct intnn_fc_layer{
     int mInDim;
     int mOutDim;
 
@@ -60,7 +64,10 @@ typedef struct {
     // Layer name
     char* mName;
 
-} intnn_fc_layer;
+    intnn_fc_layer* mNext;  // Pointer to next layer (for chaining)
+    intnn_fc_layer* mPrev;  // Pointer to previous layer (for chaining)
+
+};
 
 /**
  * @brief 创建一个全连接层
@@ -215,6 +222,8 @@ void intnn_fc_print_inter(intnn_fc_layer* layer, FILE* out);
  * @param out    输出文件指针
  */
 void intnn_fc_print_output(intnn_fc_layer* layer, FILE* out);
+
+void intnn_fc_copy_weights(intnn_fc_layer* dest, const intnn_fc_layer* src);
 
 #ifdef __cplusplus
 }

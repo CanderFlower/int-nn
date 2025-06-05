@@ -42,7 +42,7 @@ intnn_mat* intnn_create_mat(int rows, int cols) {
 // 释放矩阵
 void intnn_free_mat(intnn_mat* mat) {
     if (!mat)
-        return;
+        __debugbreak();
     if (mat->mDeleteOnDestruct) {
         if (mat->mMat) {
             for (int r = 0; r < mat->mRows; ++r) {
@@ -51,7 +51,7 @@ void intnn_free_mat(intnn_mat* mat) {
             free(mat->mMat);
         }
     }
-    free(mat);
+    //free(mat);
 }
 
 // 复制矩阵
@@ -72,14 +72,14 @@ intnn_mat* intnn_copy_mat(const intnn_mat* src) {
 // 设置是否自动释放数据
 void intnn_set_delete_on_destruct(intnn_mat* mat, bool flag) {
     if (!mat)
-        return;
+        __debugbreak();
     mat->mDeleteOnDestruct = flag;
 }
 
 // 设置所有元素为常数
 void intnn_set_all_constant(intnn_mat* mat, int value) {
     if (!mat)
-        return;
+        __debugbreak();
     for (int r = 0; r < mat->mRows; ++r) {
         for (int c = 0; c < mat->mCols; ++c) {
             mat->mMat[r][c] = value;
@@ -90,7 +90,7 @@ void intnn_set_all_constant(intnn_mat* mat, int value) {
 // 设置随机元素，范围[minVal, maxVal]，allowZero决定是否允许0
 void intnn_set_random(intnn_mat* mat, bool allowZero, int minVal, int maxVal) {
     if (!mat || minVal > maxVal)
-        return;
+        __debugbreak();
     for (int r = 0; r < mat->mRows; ++r) {
         for (int c = 0; c < mat->mCols; ++c) {
             int val;
@@ -105,9 +105,9 @@ void intnn_set_random(intnn_mat* mat, bool allowZero, int minVal, int maxVal) {
 // 设置单个元素
 void intnn_set_elem(intnn_mat* mat, int r, int c, int val) {
     if (!mat)
-        return;
+        __debugbreak();
     if (r < 0 || r >= mat->mRows || c < 0 || c >= mat->mCols)
-        return;
+        __debugbreak();
     mat->mMat[r][c] = val;
 }
 
@@ -128,7 +128,7 @@ intnn_mat* intnn_set_mat_from_array(int rows, int cols, int* data) {
 // 重新设置矩阵大小并清零（旧数据释放）
 void intnn_reset_zero(intnn_mat* mat, int rows, int cols) {
     if (!mat || rows <= 0 || cols <= 0)
-        return;
+        __debugbreak();
     if (mat->mDeleteOnDestruct && mat->mMat) {
         for (int r = 0; r < mat->mRows; ++r)
             free(mat->mMat[r]);
@@ -195,21 +195,21 @@ int intnn_get_elem(const intnn_mat* mat, int r, int c) {
 // 获取内部二维数据指针（非const，谨慎使用）
 int** intnn_get_data(intnn_mat* mat) {
     if (!mat)
-        return NULL;
+        __debugbreak();
     return mat->mMat;
 }
 
 // 判断两个矩阵尺寸是否相等
 bool intnn_dims_equal(const intnn_mat* m1, const intnn_mat* m2) {
     if (!m1 || !m2)
-        return false;
+        __debugbreak();
     return (m1->mRows == m2->mRows) && (m1->mCols == m2->mCols);
 }
 
 // 判断矩阵尺寸是否等于指定大小
 bool intnn_dims_equal_size(const intnn_mat* mat, int r, int c) {
     if (!mat)
-        return false;
+        __debugbreak();
     return (mat->mRows == r) && (mat->mCols == c);
 }
 
@@ -343,7 +343,7 @@ int intnn_stdev(const intnn_mat* mat) {
 // 按列计算平均，替换矩阵为每列平均值的一行矩阵（行=1）
 void intnn_average_colwise(intnn_mat* mat) {
     if (!mat || mat->mRows == 0 || mat->mCols == 0)
-        return;
+        __debugbreak();
 
     for (int c = 0; c < mat->mCols; c++) {
         long long sum = 0;
@@ -360,7 +360,7 @@ void intnn_average_colwise(intnn_mat* mat) {
 // 标准化，将矩阵元素映射到 [low, high]，基于 numSigma 个标准差范围
 void intnn_standardize(intnn_mat* mat, int numSigma, int low, int high) {
     if (!mat || mat->mRows == 0 || mat->mCols == 0)
-        return;
+        __debugbreak();
     int avg = intnn_average(mat);
     int std = intnn_stdev_with_avg(mat, avg);
     int range = 2 * numSigma * std;
@@ -384,7 +384,7 @@ void intnn_standardize(intnn_mat* mat, int numSigma, int low, int high) {
 // 按行归一化到 [newMin, newMax]
 void intnn_normalize_rowwise(intnn_mat* mat, int newMin, int newMax) {
     if (!mat || mat->mRows == 0 || mat->mCols == 0)
-        return;
+        __debugbreak();
     for (int r = 0; r < mat->mRows; r++) {
         int minVal = mat->mMat[r][0], maxVal = mat->mMat[r][0];
         for (int c = 1; c < mat->mCols; c++) {
@@ -408,7 +408,7 @@ void intnn_normalize_rowwise(intnn_mat* mat, int newMin, int newMax) {
 // 按列归一化到 [newMin, newMax]
 void intnn_normalize_colwise(intnn_mat* mat, int newMin, int newMax) {
     if (!mat || mat->mRows == 0 || mat->mCols == 0)
-        return;
+        __debugbreak();
     for (int c = 0; c < mat->mCols; c++) {
         int minVal = mat->mMat[0][c], maxVal = mat->mMat[0][c];
         for (int r = 1; r < mat->mRows; r++) {
@@ -432,7 +432,7 @@ void intnn_normalize_colwise(intnn_mat* mat, int newMin, int newMax) {
 // 整个矩阵归一化（全局minmax）
 void intnn_normalize_minmax(intnn_mat* mat, int newMin, int newMax) {
     if (!mat || mat->mRows == 0 || mat->mCols == 0)
-        return;
+        __debugbreak();
     int minVal = mat->mMat[0][0], maxVal = mat->mMat[0][0];
     for (int r = 0; r < mat->mRows; r++) {
         for (int c = 0; c < mat->mCols; c++) {
@@ -458,7 +458,7 @@ void intnn_normalize_minmax(intnn_mat* mat, int newMin, int newMax) {
 // 限制矩阵元素在区间 [low, high]
 void intnn_clamp_mat(intnn_mat* mat, int low, int high) {
     if (!mat)
-        return;
+        __debugbreak();
     for (int r = 0; r < mat->mRows; r++) {
         for (int c = 0; c < mat->mCols; c++) {
             if (mat->mMat[r][c] < low)
@@ -472,11 +472,17 @@ void intnn_clamp_mat(intnn_mat* mat, int low, int high) {
 // 矩阵乘法：out = a * b
 void intnn_mat_mul_mat(intnn_mat* out, const intnn_mat* a, const intnn_mat* b) {
     if (!out || !a || !b)
-        return;
+        __debugbreak();
     if (a->mCols != b->mRows)
-        return;  // 不兼容尺寸
-    if (out->mRows != a->mRows || out->mCols != b->mCols)
-        return;
+    {
+		printf("a size: (%d, %d)\n", a->mRows, a->mCols);
+		printf("b size: (%d, %d)\n", b->mRows, b->mCols);
+		printf("Matrix multiplication dimension mismatch: a.cols != b.rows\n");
+        __debugbreak();
+    }
+    if (out->mRows != a->mRows || out->mCols != b->mCols){
+        __debugbreak();
+    }
 
     for (int r = 0; r < a->mRows; r++) {
         for (int c = 0; c < b->mCols; c++) {
@@ -493,11 +499,11 @@ void intnn_mat_mul_mat(intnn_mat* out, const intnn_mat* a, const intnn_mat* b) {
 // 矩阵加法：out = a + b
 void intnn_mat_add_mat(intnn_mat* out, const intnn_mat* a, const intnn_mat* b) {
     if (!out || !a || !b)
-        return;
+        __debugbreak();
     if (a->mRows != b->mRows || a->mCols != b->mCols)
-        return;
+        __debugbreak();
     if (out->mRows != a->mRows || out->mCols != a->mCols)
-        return;
+        __debugbreak();
 
     for (int r = 0; r < a->mRows; r++) {
         for (int c = 0; c < a->mCols; c++) {
@@ -510,13 +516,11 @@ void intnn_mat_add_mat(intnn_mat* out, const intnn_mat* a, const intnn_mat* b) {
 void intnn_mat_elem_mul_mat(intnn_mat* out,
                             const intnn_mat* a,
                             const intnn_mat* b) {
-    if (!out || !a || !b)
-        return;
+    if (!a || !b || !out) __debugbreak();
     if (a->mRows != b->mRows || a->mCols != b->mCols)
-        return;
-    if (out->mRows != a->mRows || out->mCols != a->mCols)
-        return;
+        __debugbreak();
 
+    
     for (int r = 0; r < a->mRows; r++) {
         for (int c = 0; c < a->mCols; c++) {
             out->mMat[r][c] = a->mMat[r][c] * b->mMat[r][c];
@@ -529,11 +533,11 @@ void intnn_mat_elem_div_mat(intnn_mat* out,
                             const intnn_mat* a,
                             const intnn_mat* b) {
     if (!out || !a || !b)
-        return;
+        __debugbreak();
     if (a->mRows != b->mRows || a->mCols != b->mCols)
-        return;
+        __debugbreak();
     if (out->mRows != a->mRows || out->mCols != a->mCols)
-        return;
+        __debugbreak();
 
     for (int r = 0; r < a->mRows; r++) {
         for (int c = 0; c < a->mCols; c++) {
@@ -548,9 +552,9 @@ void intnn_mat_elem_div_mat(intnn_mat* out,
 // 矩阵加常数：out = a + val
 void intnn_mat_add_const(intnn_mat* out, const intnn_mat* a, int val) {
     if (!out || !a)
-        return;
+        __debugbreak();
     if (out->mRows != a->mRows || out->mCols != a->mCols)
-        return;
+        __debugbreak();
 
     for (int r = 0; r < a->mRows; r++) {
         for (int c = 0; c < a->mCols; c++) {
@@ -562,9 +566,9 @@ void intnn_mat_add_const(intnn_mat* out, const intnn_mat* a, int val) {
 // 矩阵乘常数：out = a * val
 void intnn_mat_mul_const(intnn_mat* out, const intnn_mat* a, int val) {
     if (!out || !a)
-        return;
+        __debugbreak();
     if (out->mRows != a->mRows || out->mCols != a->mCols)
-        return;
+        __debugbreak();
 
     for (int r = 0; r < a->mRows; r++) {
         for (int c = 0; c < a->mCols; c++) {
@@ -576,11 +580,11 @@ void intnn_mat_mul_const(intnn_mat* out, const intnn_mat* a, int val) {
 // 矩阵除常数：out = a / val
 void intnn_mat_div_const(intnn_mat* out, const intnn_mat* a, int val) {
     if (!out || !a)
-        return;
+        __debugbreak();
     if (val == 0)
         val = 1;  // 防止除零
     if (out->mRows != a->mRows || out->mCols != a->mCols)
-        return;
+        __debugbreak();
 
     for (int r = 0; r < a->mRows; r++) {
         for (int c = 0; c < a->mCols; c++) {
@@ -596,15 +600,7 @@ static inline int dimsEqual(const intnn_mat* a, const intnn_mat* b) {
 
 // 重置矩阵尺寸并清零
 void resetZero(intnn_mat* mat, int rows, int cols) {
-    if (!mat) return;
-
-    // 先释放旧的内存
-    if (mat->mMat) {
-        for (int i = 0; i < mat->mRows; i++) {
-            free(mat->mMat[i]);
-        }
-        free(mat->mMat);
-    }
+    if(mat) intnn_free_mat(mat);
 
     // 更新维度
     mat->mRows = rows;
@@ -636,7 +632,7 @@ void intnn_self_mul_const(intnn_mat* mat, int val) {
 void intnn_self_div_const(intnn_mat* mat, int val) {
     if (val == 0) {
         // 避免除零，报错或返回
-        return;
+        __debugbreak();
     }
     for (int r = 0; r < mat->mRows; ++r) {
         for (int c = 0; c < mat->mCols; ++c) {
@@ -652,18 +648,27 @@ void intnn_self_elem_add_const(intnn_mat* mat, int r, int c, int val) {
 }
 
 void intnn_self_add_mat(intnn_mat* mat, const intnn_mat* b) {
-    if (!dimsEqual(mat, b))
-        return;
-    for (int r = 0; r < mat->mRows; ++r) {
-        for (int c = 0; c < mat->mCols; ++c) {
-            mat->mMat[r][c] += b->mMat[r][c];
+    if (mat->mCols != b->mCols)
+        __debugbreak();
+    if (mat->mRows == b->mRows) {
+        for (int r = 0; r < mat->mRows; ++r) {
+            for (int c = 0; c < mat->mCols; ++c) {
+                mat->mMat[r][c] += b->mMat[r][c];
+            }
+        }
+    }
+    else { // broadcast
+        for (int r = 0; r < mat->mRows; ++r) {
+            for (int c = 0; c < mat->mCols; ++c) {
+                mat->mMat[r][c] += b->mMat[0][c];
+            }
         }
     }
 }
 
 void intnn_self_sub_mat(intnn_mat* mat, const intnn_mat* b) {
     if (!dimsEqual(mat, b))
-        return;
+        __debugbreak();
     for (int r = 0; r < mat->mRows; ++r) {
         for (int c = 0; c < mat->mCols; ++c) {
             mat->mMat[r][c] -= b->mMat[r][c];
@@ -674,7 +679,7 @@ void intnn_self_mul_mat(intnn_mat* mat, const intnn_mat* b) {
     // 矩阵乘法： mat = mat * b
     // 先保存 mat 的副本
     if (mat->mCols != b->mRows)
-        return;  // 维度不匹配
+        __debugbreak();  // 维度不匹配
 
     intnn_mat temp;
     // 假设你有分配和释放矩阵的函数
@@ -707,7 +712,7 @@ void intnn_self_mul_mat(intnn_mat* mat, const intnn_mat* b) {
 
 void intnn_self_elem_mul_mat(intnn_mat* mat, const intnn_mat* b) {
     if (!dimsEqual(mat, b))
-        return;
+        __debugbreak();
     for (int r = 0; r < mat->mRows; ++r) {
         for (int c = 0; c < mat->mCols; ++c) {
             mat->mMat[r][c] *= b->mMat[r][c];
@@ -717,7 +722,7 @@ void intnn_self_elem_mul_mat(intnn_mat* mat, const intnn_mat* b) {
 
 void intnn_self_elem_div_mat(intnn_mat* mat, const intnn_mat* b) {
     if (!dimsEqual(mat, b))
-        return;
+        __debugbreak();
     for (int r = 0; r < mat->mRows; ++r) {
         for (int c = 0; c < mat->mCols; ++c) {
             if (b->mMat[r][c] == 0) {
@@ -776,11 +781,11 @@ void intnn_slice_of(intnn_mat* out,
     if (rowStart < 0 || colStart < 0 || rowEnd >= in->mRows ||
         colEnd >= in->mCols) {
         printf("[WARN] slice_of: Index out of bounds\n");
-        return;
+        __debugbreak();
     }
 
     if (rowEnd < rowStart || colEnd < colStart)
-        return;
+        __debugbreak();
 
     int rows = rowEnd - rowStart + 1;
     int cols = colEnd - colStart + 1;
@@ -798,13 +803,13 @@ void intnn_indexed_slice_of(intnn_mat* out,
                             int start,
                             int end) {
     if (start < 0 || end > in->mRows || start >= end)
-        return;
+        __debugbreak();
     int size = end - start;
     resetZero(out, size, in->mCols);
     for (int r = 0; r < size; ++r) {
         int idx = indices[start + r];
         if (idx < 0 || idx >= in->mRows)
-            return;
+            __debugbreak();
         for (int c = 0; c < in->mCols; ++c) {
             out->mMat[r][c] = in->mMat[idx][c];
         }
@@ -813,7 +818,7 @@ void intnn_indexed_slice_of(intnn_mat* out,
 
 void intnn_random_k_samples_of(intnn_mat* out, const intnn_mat* in, int k) {
     if (k > in->mRows)
-        return;
+        __debugbreak();
 
     int total = in->mRows;
     int* indices = malloc(sizeof(int) * total);
@@ -864,4 +869,34 @@ void intnn_mat_update_lr(intnn_mat* target,
             target->mMat[r][c] += update->mMat[r][c] / lr_inverse;
         }
     }
+}
+
+int intnn_count_max_match(const intnn_mat* predictions, const intnn_mat* targets) {
+    if (predictions->mRows != targets->mRows) {
+        printf("prediction: %d, targets: %d\n", predictions->mRows, targets->mRows);
+        __debugbreak();
+    }
+    assert(predictions->mRows == targets->mRows);
+    assert(predictions->mCols == targets->mCols);
+
+    int count = 0;
+    for (int i = 0; i < predictions->mRows; ++i) {
+        int maxPredIdx = 0;
+        int maxTargetIdx = 0;
+
+        for (int j = 1; j < predictions->mCols; ++j) {
+            if (predictions->mMat[i][j] > predictions->mMat[i][maxPredIdx]) {
+                maxPredIdx = j;
+            }
+            if (targets->mMat[i][j] > targets->mMat[i][maxTargetIdx]) {
+                maxTargetIdx = j;
+            }
+        }
+
+        if (maxPredIdx == maxTargetIdx) {
+            ++count;
+        }
+    }
+
+    return count;
 }

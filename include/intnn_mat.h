@@ -94,6 +94,7 @@ void intnn_random_k_samples_of(intnn_mat* out, const intnn_mat* in, int k);
 
 // 其他
 void intnn_print_mat(const intnn_mat* mat);
+int intnn_count_max_match(const intnn_mat* predictions, const intnn_mat* targets);
 
 // 学习率更新（类似 SGD）
 void intnn_mat_update_lr(intnn_mat* target, const intnn_mat* update, int lr_inverse);

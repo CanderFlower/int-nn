@@ -11,6 +11,12 @@ int intnn_scalar_l2_loss_delta(int y, int yHat) {
 }
 
 int intnn_batch_l2_loss(intnn_mat* lossMat, const intnn_mat* yMat, const intnn_mat* yHatMat) {
+    if (!intnn_dims_equal(yMat, yHatMat)) {
+		printf("yMat size: (%d, %d)\n", yMat->mRows, yMat->mCols);
+		printf("yHatMat size: (%d, %d)\n", yHatMat->mRows, yHatMat->mCols);
+        __debugbreak();
+    }
+
     assert(intnn_dims_equal(yMat, yHatMat));
 
     int rows = intnn_rows(yHatMat);

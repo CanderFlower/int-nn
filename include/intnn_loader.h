@@ -18,7 +18,7 @@ typedef enum {
 
 // 工具函数
 bool intnn_file_exists(const char* filename);
-void intnn_download_dataset(intnn_dataset_type dataset);
+// void intnn_download_dataset(intnn_dataset_type dataset);
 
 // CSV 加载
 void intnn_load_csv(intnn_mat* outMat, const char* filename);
