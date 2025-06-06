@@ -138,7 +138,24 @@ void intnn_fc_forward(intnn_fc_layer* layer, intnn_mat* x) {
     if (layer->mInter) intnn_free_mat(layer->mInter);
     layer->mInter = intnn_create_mat(x->mRows, layer->mWeight->mCols);
     intnn_mat_mul_mat(layer->mInter, x, layer->mWeight); // (N, D(k)) = (N, D(k-1)) × (D(k-1), D(k)) 
+
+    //printf("X OF (%d, %d):\n", layer->mInDim, layer->mOutDim);
+    //intnn_print_mat(x);
+   /* for (int i = 0; i < 10; i++, printf("\n"))
+        for (int j = 0; j < 10; j++)
+            printf("%d ", x->mMat[i][j]);*/
+    //printf("W OF (%d, %d):\n", layer->mInDim, layer->mOutDim);
+    /*for (int i = 0; i < 10; i++, printf("\n"))
+        for (int j = 0; j < 10; j++)
+            printf("%d ", layer->mWeight->mMat[i][j]);*/
+    /*intnn_print_mat(layer->mWeight);
     
+    printf("INTER OF (%d, %d):\n", layer->mInDim, layer->mOutDim);
+    intnn_print_mat(layer->mInter);*/
+    /*for(int i=0;i<10;i++,printf("\n"))
+        for(int j=0;j<10;j++)
+			printf("%d ", layer->mInter->mMat[i][j]);*/
+
     if(layer->mUseBn){
         assert(0); // 不支持
     }else{
@@ -151,8 +168,9 @@ void intnn_fc_forward(intnn_fc_layer* layer, intnn_mat* x) {
         layer->mActvGradInv = intnn_create_mat(layer->mInter->mRows, layer->mInter->mCols);
 
         intnn_activate(layer->mOutput, layer->mInter, layer->mActvGradInv,
-            layer->mActv, INTNN_K_BIT, x->mRows); // (N, D(k)) = activation((N, D(k)))
+            layer->mActv, INTNN_K_BIT, layer->mInDim); // (N, D(k)) = activation((N, D(k)))
     }
+
 
     if(layer->mNext != NULL){
         intnn_fc_forward(layer->mNext, layer->mOutput); // 递归调用下一层
@@ -174,19 +192,24 @@ void intnn_fc_backward(intnn_fc_layer* layer,
 
         intnn_mat_elem_div_mat(layer->mDeltas, lastDeltas, layer->mActvGradInv); // (N, D(k)) = (N, D(k)) / (1, D(k))
     }
-    if(!layer->mUseDfa){
-        assert(0); // 不支持
-    }else{
-        if (!layer->mDfaWeight) {
-            int range = intnn_floor_sqrt((12 * SHRT_MAX) / (layer->mInDim + layer->mOutDim));
-            layer->mDfaWeight = intnn_create_mat(lastDeltas->mCols, layer->mWeight->mCols);
-            intnn_set_random(layer->mDfaWeight, false, -range, range);
-            printf("DMA initialized!\n");
+    else {
+        if (!layer->mUseDfa) {
+            assert(0); // 不支持
         }
-        if (layer->mDeltas) intnn_free_mat(layer->mDeltas);
-        layer->mDeltas = intnn_create_mat(lastDeltas->mRows, layer->mDfaWeight->mCols);
-        intnn_mat_mul_mat(layer->mDeltas, lastDeltas, layer->mDfaWeight); // (N, D(k)) = (N, D(k-1)) × (D(k-1), D(k))
-        intnn_self_elem_div_mat(layer->mDeltas, layer->mActvGradInv); // (N, D(k)) = (N, D(k)) / (1, D(k))
+        else {
+            if (!layer->mDfaWeight) {
+                int range = intnn_floor_sqrt((12 * SHRT_MAX) / (layer->mInDim + layer->mOutDim));
+                layer->mDfaWeight = intnn_create_mat(lastDeltas->mCols, layer->mWeight->mCols);
+                intnn_set_random(layer->mDfaWeight, false, -range, range);
+                //printf("DFA initialized!\n");
+                //printf("initial DFA of layer %d->%d, size:(%d, %d)\n", layer->mInDim, layer->mOutDim, layer->mDfaWeight->mRows, layer->mDfaWeight->mCols);
+                //intnn_print_mat(layer->mDfaWeight);
+            }
+            if (layer->mDeltas) intnn_free_mat(layer->mDeltas);
+            layer->mDeltas = intnn_create_mat(lastDeltas->mRows, layer->mDfaWeight->mCols);
+            intnn_mat_mul_mat(layer->mDeltas, lastDeltas, layer->mDfaWeight); // (N, D(k)) = (N, D(k-1)) × (D(k-1), D(k))
+            intnn_self_elem_div_mat(layer->mDeltas, layer->mActvGradInv); // (N, D(k)) = (N, D(k)) / (1, D(k))
+        }
     }
     
     if (layer->mDeltasTranspose) intnn_free_mat(layer->mDeltasTranspose);
@@ -195,6 +218,17 @@ void intnn_fc_backward(intnn_fc_layer* layer,
     intnn_transpose_of(layer->mDeltasTranspose, layer->mDeltas); // (D(k), N) = (N, D(k))
 
     // AFTER COMPUTE DELTAS
+
+    /*printf("MDELTAS of layer %d->%d \n", layer->mInDim, layer->mOutDim);
+    for(int i=0;i<10;i++,printf("\n"))
+		for (int j = 0; j < 10; j++)
+			printf("%d | ", layer->mDeltas->mMat[i][j]);
+
+    printf("LAST LAYER DELTAS of layer %d->%d:\n", layer->mInDim, layer->mOutDim);
+    for (int i = 0; i < 10; i++, printf("\n"))
+        for (int j = 0; j < 10; j++)
+            printf("%d | ", lastDeltas->mMat[i][j]);*/
+    
 
     int batchSize = layer->mDeltas->mRows;
 
@@ -214,6 +248,13 @@ void intnn_fc_backward(intnn_fc_layer* layer,
     intnn_mat_mul_mat(layer->mWeightUpdate, prevOutputTranspose, layer->mDeltas); // (D(k-1), D(k)) = (D(k-1), N) × (N, D(k))
 
     intnn_self_div_const(layer->mWeightUpdate, -lrInv); // (D(k-1), D(k)) /= -lrInv
+
+
+    /*printf("WEIGHT UPDATE of layer %d->%d:\n", layer->mInDim, layer->mOutDim);
+    for (int i = 0; i < layer->mWeightUpdate->mRows; i++, printf("\n"))
+        for (int j = 0; j < layer->mWeightUpdate->mCols; j++)
+            printf("%d | ", layer->mWeightUpdate->mMat[i][j]);*/
+
     intnn_self_add_mat(layer->mWeight, layer->mWeightUpdate); // (D(k-1), D(k)) += (D(k-1), D(k))
 
     //intnn_print_mat(layer->mWeightUpdate);
@@ -234,14 +275,14 @@ void intnn_fc_backward(intnn_fc_layer* layer,
         intnn_free_mat(allOneMat); // 释放临时矩阵
     }
 
-	printf("Size: %d, %d\n", layer->mWeight->mRows, layer->mWeight->mCols);
+	/*printf("Size: %d, %d\n", layer->mWeight->mRows, layer->mWeight->mCols);
     printf("Weight:\n");
     for (int i = 0; i < 10; i++, printf("\n"))
         for (int j = 0; j < 10; j++)
             printf("%d ", layer->mWeight->mMat[i][j]);
     printf("Bias:\n");
 	for (int i = 0; i < 10; i++, printf("\n"))
-		printf("%d ", layer->mBias->mMat[0][i]);
+		printf("%d ", layer->mBias->mMat[0][i]);*/
 
     intnn_free_mat(prevOutputTranspose); // 释放转置矩阵
 

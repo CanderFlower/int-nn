@@ -16,9 +16,9 @@ int example_intnn_fc_dfa_mnist() {
     const int dimInput = 28 * 28;
     const int dim1 = 100;
     const int dim2 = 50;
-    const int epochs = 3;
+    const int epochs = 5;
     const int miniBatchSize = 20;
-    int lrInv = 100;
+    int lrInv = 1000;
 
     srand((unsigned int)time(NULL));
 
@@ -84,21 +84,15 @@ int example_intnn_fc_dfa_mnist() {
     int correct;
 
     //// 初始化前向精度（训练用）
-    //intnn_fc_forward(fc1, trainImages);
-    //intnn_fc_forward(fc2, intnn_fc_get_output(fc1));
-    //intnn_fc_forward(fc3, intnn_fc_get_output(fc2));
-    //correct = intnn_count_max_match(intnn_fc_get_output(fc3), trainTarget);
-    //printf("Initial training correct: %d / %d\n", correct, numTrain);
+    intnn_fc_forward(fc1, trainImages);
+    correct = intnn_count_max_match(intnn_fc_get_output(fc3), trainTarget);
+    printf("Initial training correct: %d / %d\n", correct, numTrain);
+    printf("Initial training accuracy: %.2f%%\n", correct * 100.0 / numTrain);
 
-    //// 拷贝参数 -> 测试前向
-    //intnn_fc_copy_weights(fc1, fc1_test);
-    //intnn_fc_copy_weights(fc2, fc2_test);
-    //intnn_fc_copy_weights(fc3, fc3_test);
-    //intnn_fc_forward(fc1_test, testImages);
-    //intnn_fc_forward(fc2_test, intnn_fc_get_output(fc1_test));
-    //intnn_fc_forward(fc3_test, intnn_fc_get_output(fc2_test));
-    //correct = intnn_count_max_match(intnn_fc_get_output(fc3_test), testTarget);
-    //printf("Initial test correct: %d / %d\n", correct, numTest);
+    intnn_fc_forward(fc1, testImages);
+    correct = intnn_count_max_match(intnn_fc_get_output(fc3), testTarget);
+    printf("Initial test correct: %d / %d\n", correct, numTest);
+    printf("Initial test accuracy: %.2f%%\n", correct * 100.0 / numTest);
 
     // 训练过程
     int* indices = malloc(sizeof(int) * numTrain);
@@ -108,7 +102,7 @@ int example_intnn_fc_dfa_mnist() {
     intnn_mat* miniY = intnn_create_mat(miniBatchSize, numClasses);
     intnn_mat* lossMat = intnn_create_mat(miniBatchSize, numClasses);
     intnn_mat* deltaMat = intnn_create_mat(miniBatchSize, numClasses);
-    printf("Epoch,TrainLoss,TrainAcc,TestAcc\n");
+    printf("Epoch,\tTrainLoss,\tTrainAcc,\tTestAcc\n");
 
     for (int ep = 1; ep <= epochs; ++ep) {
         intnn_tools_shuffle_indices(indices, numTrain);
@@ -118,6 +112,9 @@ int example_intnn_fc_dfa_mnist() {
         for (int i = 0; i < numTrain / miniBatchSize; ++i) {
             intnn_indexed_slice_of(miniX, trainImages, indices, i * miniBatchSize, (i + 1) * miniBatchSize);
 
+           /* printf("\n======================================\n");
+            printf("FORWARD START:\n");
+            printf("\n======================================\n");*/
             intnn_fc_forward(fc1, miniX);
             int aa = 0;
             intnn_indexed_slice_of(miniY, trainTarget, indices, i * miniBatchSize, (i + 1) * miniBatchSize);
@@ -125,19 +122,18 @@ int example_intnn_fc_dfa_mnist() {
             intnn_batch_l2_loss_delta(deltaMat, miniY, intnn_fc_get_output(fc3));
             totalCorrect += intnn_count_max_match(intnn_fc_get_output(fc3), miniY);
 
+            /*printf("\n======================================\n");
+            printf("BACKWARD START:\n");
+            printf("\n======================================\n");*/
             intnn_fc_backward(fc3, deltaMat, lrInv);
         }
 
-        // 更新测试层参数并前向
-        intnn_fc_copy_weights(fc1, fc1_test);
-        intnn_fc_copy_weights(fc2, fc2_test);
-        intnn_fc_copy_weights(fc3, fc3_test);
-        intnn_fc_forward(fc1_test, testImages);
-        int testCorrect = intnn_count_max_match(intnn_fc_get_output(fc3_test), testTarget);
+        intnn_fc_forward(fc1, testImages);
+        int testCorrect = intnn_count_max_match(intnn_fc_get_output(fc3), testTarget);
 
-        printf("%d,%d,%.3f,%.3f\n", ep, totalLoss,
-            totalCorrect * 1.0 / numTrain,
-            testCorrect * 1.0 / numTest);
+        printf("%d,\t%-8d,\t%.2f%%,\t\t%.2f%%\n", ep, totalLoss,
+            totalCorrect * 100.0 / numTrain,
+            testCorrect * 100.0 / numTest);
 
         if ((ep % 10 == 0) && lrInv < 20000) lrInv *= 2;
     }

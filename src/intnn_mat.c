@@ -483,17 +483,50 @@ void intnn_mat_mul_mat(intnn_mat* out, const intnn_mat* a, const intnn_mat* b) {
     if (out->mRows != a->mRows || out->mCols != b->mCols){
         __debugbreak();
     }
+    /*if (!(a->mRows < 11 || a->mCols < 11 || b->mRows < 11 || b->mCols < 11)) {
+        printf("A:\n");
+        for (int i = 0; i < 10; i++, printf("\n"))
+            for (int j = 0; j < 10; j++)
+                printf("%d ", a->mMat[i][j]);
+        printf("B:\n");
+        for (int i = 0; i < 10; i++, printf("\n"))
+            for (int j = 0; j < 10; j++)
+                printf("%d ", b->mMat[i][j]);
+        printf("OUT OF MULTI:\n");
+        for (int i = 0; i < 10; i++, printf("\n"))
+            for (int j = 0; j < 10; j++)
+                printf("%d ", out->mMat[i][j]);
+    }
+    printf("------------------\n");*/
+    int flag = 1;
+    for (int i = 0; i < a->mRows; i++)
+        for (int j = 0; j < a->mCols; j++)
+            if (a->mMat[i][j]) flag = 0;
 
     for (int r = 0; r < a->mRows; r++) {
         for (int c = 0; c < b->mCols; c++) {
             long long sum = 0;
             for (int k = 0; k < a->mCols; k++) {
                 sum += (long long)a->mMat[r][k] * b->mMat[k][c];
+                //if (sum) printf("%d %d %d\n", a->mMat[r][k], b->mMat[k][c], k);
             }
-            // 根据需要这里可以做截断、溢出检查等
             out->mMat[r][c] = (int)sum;
         }
     }
+    /*if (!(a->mRows < 11 || a->mCols < 11 || b->mRows < 11 || b->mCols < 11)) {
+        printf("A:\n");
+        for (int i = 0; i < 10; i++, printf("\n"))
+            for (int j = 0; j < 10; j++)
+                printf("%d ", a->mMat[i][j]);
+        printf("B:\n");
+        for (int i = 0; i < 10; i++, printf("\n"))
+            for (int j = 0; j < 10; j++)
+                printf("%d ", b->mMat[i][j]);
+        printf("OUT OF MULTI:\n");
+        for (int i = 0; i < 10; i++, printf("\n"))
+            for (int j = 0; j < 10; j++)
+                printf("%d ", out->mMat[i][j]);
+    }*/
 }
 
 // 矩阵加法：out = a + b
