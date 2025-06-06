@@ -20,7 +20,7 @@ int example_intnn_fc_dfa_mnist() {
     const int miniBatchSize = 20;
     int lrInv = 1000;
 
-    srand((unsigned int)time(NULL));
+    srand(114514);
 
     // 加载数据
     intnn_mat* trainImages = intnn_create_mat(numTrain, dimInput);
@@ -134,6 +134,11 @@ int example_intnn_fc_dfa_mnist() {
         printf("%d,\t%-8d,\t%.2f%%,\t\t%.2f%%\n", ep, totalLoss,
             totalCorrect * 100.0 / numTrain,
             testCorrect * 100.0 / numTest);
+
+        if(ep == epochs){
+            printf("Final training accuracy: %.2f%%\n", totalCorrect * 100.0 / numTrain);
+            printf("Final test accuracy: %.2f%%\n", testCorrect * 100.0 / numTest);
+        }
 
         if ((ep % 10 == 0) && lrInv < 20000) lrInv *= 2;
     }

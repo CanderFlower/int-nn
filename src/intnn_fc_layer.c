@@ -312,7 +312,7 @@ intnn_mat* intnn_fc_get_deltas_transpose(intnn_fc_layer* layer) {
 
 void intnn_fc_set_name(intnn_fc_layer* layer, const char* name) {
     strncpy(layer->mName, name, sizeof(layer->mName));
-    layer->mName[sizeof(layer->mName) - 1] = '\\0';
+    layer->mName[sizeof(layer->mName) - 1] = '\0';
 }
 
 void intnn_fc_set_actv(intnn_fc_layer* layer, intnn_actv_type actv) {

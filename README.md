@@ -4,6 +4,23 @@ A nerual network library based on pure C, using only integer arithmetic, designe
 
 Final Project for "Machine Learning Systems" course at Fudan University.
 
+## Setup
+Make sure you have the following dependencies installed:
+- CMake
+- GCC
+
+Then, simply run:
+```bash
+build.bat
+```
+
+## Result
+The train/test will as follows and it is replicable:
+```
+Final training accuracy: 97.00%
+Final test accuracy: 96.77%
+```
+
 ## Collaborators
 - [@NekoYellow](https://github.com/NekoYellow)
 - [@tuihuademing2](https://github.com/tuihuademing2)
