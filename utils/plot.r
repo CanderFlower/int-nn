@@ -137,12 +137,14 @@ grid.text("Weight: w bits", x = unit(x_left_col, "npc"), y = unit(y_output + y_t
 # Delta BP formulas
 bp_y_coords <- c(coords_h5$y_center, coords_h4$y_center, coords_h3$y_center, coords_h2$y_center, coords_h1$y_center)
 bp_superscripts <- 5:1
-bp_w_multipliers <- 1:5
+bp_w_multipliers <- 0:4
 
 for (i in 1:5) {
     k_val <- bp_superscripts[i]
     w_mult <- bp_w_multipliers[i]
-    if (w_mult == 1) {
+    if (w_mult == 0) {
+      formula_bp <- bquote(delta[BP]^{"["*.(k_val)*"]"} == O(2^{e}))
+    } else if (w_mult == 1) {
       formula_bp <- bquote(delta[BP]^{"["*.(k_val)*"]"} == O(2^{e+w}))
     } else {
       formula_bp <- bquote(delta[BP]^{"["*.(k_val)*"]"} == O(2^{e+.(w_mult)*w}))
