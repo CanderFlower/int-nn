@@ -42,7 +42,7 @@ intnn_mat* intnn_create_mat(int rows, int cols) {
 // 释放矩阵
 void intnn_free_mat(intnn_mat* mat) {
     if (!mat)
-        __debugbreak();
+        assert(0);
     if (mat->mDeleteOnDestruct) {
         if (mat->mMat) {
             for (int r = 0; r < mat->mRows; ++r) {
@@ -72,14 +72,14 @@ intnn_mat* intnn_copy_mat(const intnn_mat* src) {
 // 设置是否自动释放数据
 void intnn_set_delete_on_destruct(intnn_mat* mat, bool flag) {
     if (!mat)
-        __debugbreak();
+        assert(0);
     mat->mDeleteOnDestruct = flag;
 }
 
 // 设置所有元素为常数
 void intnn_set_all_constant(intnn_mat* mat, int value) {
     if (!mat)
-        __debugbreak();
+        assert(0);
     for (int r = 0; r < mat->mRows; ++r) {
         for (int c = 0; c < mat->mCols; ++c) {
             mat->mMat[r][c] = value;
@@ -90,7 +90,7 @@ void intnn_set_all_constant(intnn_mat* mat, int value) {
 // 设置随机元素，范围[minVal, maxVal]，allowZero决定是否允许0
 void intnn_set_random(intnn_mat* mat, bool allowZero, int minVal, int maxVal) {
     if (!mat || minVal > maxVal)
-        __debugbreak();
+        assert(0);
     for (int r = 0; r < mat->mRows; ++r) {
         for (int c = 0; c < mat->mCols; ++c) {
             int val;
@@ -105,9 +105,9 @@ void intnn_set_random(intnn_mat* mat, bool allowZero, int minVal, int maxVal) {
 // 设置单个元素
 void intnn_set_elem(intnn_mat* mat, int r, int c, int val) {
     if (!mat)
-        __debugbreak();
+        assert(0);
     if (r < 0 || r >= mat->mRows || c < 0 || c >= mat->mCols)
-        __debugbreak();
+        assert(0);
     mat->mMat[r][c] = val;
 }
 
@@ -128,7 +128,7 @@ intnn_mat* intnn_set_mat_from_array(int rows, int cols, int* data) {
 // 重新设置矩阵大小并清零（旧数据释放）
 void intnn_reset_zero(intnn_mat* mat, int rows, int cols) {
     if (!mat || rows <= 0 || cols <= 0)
-        __debugbreak();
+        assert(0);
     if (mat->mDeleteOnDestruct && mat->mMat) {
         for (int r = 0; r < mat->mRows; ++r)
             free(mat->mMat[r]);
@@ -195,21 +195,21 @@ int intnn_get_elem(const intnn_mat* mat, int r, int c) {
 // 获取内部二维数据指针（非const，谨慎使用）
 int** intnn_get_data(intnn_mat* mat) {
     if (!mat)
-        __debugbreak();
+        assert(0);
     return mat->mMat;
 }
 
 // 判断两个矩阵尺寸是否相等
 bool intnn_dims_equal(const intnn_mat* m1, const intnn_mat* m2) {
     if (!m1 || !m2)
-        __debugbreak();
+        assert(0);
     return (m1->mRows == m2->mRows) && (m1->mCols == m2->mCols);
 }
 
 // 判断矩阵尺寸是否等于指定大小
 bool intnn_dims_equal_size(const intnn_mat* mat, int r, int c) {
     if (!mat)
-        __debugbreak();
+        assert(0);
     return (mat->mRows == r) && (mat->mCols == c);
 }
 
@@ -343,7 +343,7 @@ int intnn_stdev(const intnn_mat* mat) {
 // 按列计算平均，替换矩阵为每列平均值的一行矩阵（行=1）
 void intnn_average_colwise(intnn_mat* mat) {
     if (!mat || mat->mRows == 0 || mat->mCols == 0)
-        __debugbreak();
+        assert(0);
 
     for (int c = 0; c < mat->mCols; c++) {
         long long sum = 0;
@@ -360,7 +360,7 @@ void intnn_average_colwise(intnn_mat* mat) {
 // 标准化，将矩阵元素映射到 [low, high]，基于 numSigma 个标准差范围
 void intnn_standardize(intnn_mat* mat, int numSigma, int low, int high) {
     if (!mat || mat->mRows == 0 || mat->mCols == 0)
-        __debugbreak();
+        assert(0);
     int avg = intnn_average(mat);
     int std = intnn_stdev_with_avg(mat, avg);
     int range = 2 * numSigma * std;
@@ -384,7 +384,7 @@ void intnn_standardize(intnn_mat* mat, int numSigma, int low, int high) {
 // 按行归一化到 [newMin, newMax]
 void intnn_normalize_rowwise(intnn_mat* mat, int newMin, int newMax) {
     if (!mat || mat->mRows == 0 || mat->mCols == 0)
-        __debugbreak();
+        assert(0);
     for (int r = 0; r < mat->mRows; r++) {
         int minVal = mat->mMat[r][0], maxVal = mat->mMat[r][0];
         for (int c = 1; c < mat->mCols; c++) {
@@ -408,7 +408,7 @@ void intnn_normalize_rowwise(intnn_mat* mat, int newMin, int newMax) {
 // 按列归一化到 [newMin, newMax]
 void intnn_normalize_colwise(intnn_mat* mat, int newMin, int newMax) {
     if (!mat || mat->mRows == 0 || mat->mCols == 0)
-        __debugbreak();
+        assert(0);
     for (int c = 0; c < mat->mCols; c++) {
         int minVal = mat->mMat[0][c], maxVal = mat->mMat[0][c];
         for (int r = 1; r < mat->mRows; r++) {
@@ -432,7 +432,7 @@ void intnn_normalize_colwise(intnn_mat* mat, int newMin, int newMax) {
 // 整个矩阵归一化（全局minmax）
 void intnn_normalize_minmax(intnn_mat* mat, int newMin, int newMax) {
     if (!mat || mat->mRows == 0 || mat->mCols == 0)
-        __debugbreak();
+        assert(0);
     int minVal = mat->mMat[0][0], maxVal = mat->mMat[0][0];
     for (int r = 0; r < mat->mRows; r++) {
         for (int c = 0; c < mat->mCols; c++) {
@@ -458,7 +458,7 @@ void intnn_normalize_minmax(intnn_mat* mat, int newMin, int newMax) {
 // 限制矩阵元素在区间 [low, high]
 void intnn_clamp_mat(intnn_mat* mat, int low, int high) {
     if (!mat)
-        __debugbreak();
+        assert(0);
     for (int r = 0; r < mat->mRows; r++) {
         for (int c = 0; c < mat->mCols; c++) {
             if (mat->mMat[r][c] < low)
@@ -472,16 +472,16 @@ void intnn_clamp_mat(intnn_mat* mat, int low, int high) {
 // 矩阵乘法：out = a * b
 void intnn_mat_mul_mat(intnn_mat* out, const intnn_mat* a, const intnn_mat* b) {
     if (!out || !a || !b)
-        __debugbreak();
+        assert(0);
     if (a->mCols != b->mRows)
     {
 		printf("a size: (%d, %d)\n", a->mRows, a->mCols);
 		printf("b size: (%d, %d)\n", b->mRows, b->mCols);
 		printf("Matrix multiplication dimension mismatch: a.cols != b.rows\n");
-        __debugbreak();
+        assert(0);
     }
     if (out->mRows != a->mRows || out->mCols != b->mCols){
-        __debugbreak();
+        assert(0);
     }
     /*if (!(a->mRows < 11 || a->mCols < 11 || b->mRows < 11 || b->mCols < 11)) {
         printf("A:\n");
@@ -532,11 +532,11 @@ void intnn_mat_mul_mat(intnn_mat* out, const intnn_mat* a, const intnn_mat* b) {
 // 矩阵加法：out = a + b
 void intnn_mat_add_mat(intnn_mat* out, const intnn_mat* a, const intnn_mat* b) {
     if (!out || !a || !b)
-        __debugbreak();
+        assert(0);
     if (a->mRows != b->mRows || a->mCols != b->mCols)
-        __debugbreak();
+        assert(0);
     if (out->mRows != a->mRows || out->mCols != a->mCols)
-        __debugbreak();
+        assert(0);
 
     for (int r = 0; r < a->mRows; r++) {
         for (int c = 0; c < a->mCols; c++) {
@@ -549,9 +549,9 @@ void intnn_mat_add_mat(intnn_mat* out, const intnn_mat* a, const intnn_mat* b) {
 void intnn_mat_elem_mul_mat(intnn_mat* out,
                             const intnn_mat* a,
                             const intnn_mat* b) {
-    if (!a || !b || !out) __debugbreak();
+    if (!a || !b || !out) assert(0);
     if (a->mRows != b->mRows || a->mCols != b->mCols)
-        __debugbreak();
+        assert(0);
 
     
     for (int r = 0; r < a->mRows; r++) {
@@ -566,11 +566,11 @@ void intnn_mat_elem_div_mat(intnn_mat* out,
                             const intnn_mat* a,
                             const intnn_mat* b) {
     if (!out || !a || !b)
-        __debugbreak();
+        assert(0);
     if (a->mRows != b->mRows || a->mCols != b->mCols)
-        __debugbreak();
+        assert(0);
     if (out->mRows != a->mRows || out->mCols != a->mCols)
-        __debugbreak();
+        assert(0);
 
     for (int r = 0; r < a->mRows; r++) {
         for (int c = 0; c < a->mCols; c++) {
@@ -585,9 +585,9 @@ void intnn_mat_elem_div_mat(intnn_mat* out,
 // 矩阵加常数：out = a + val
 void intnn_mat_add_const(intnn_mat* out, const intnn_mat* a, int val) {
     if (!out || !a)
-        __debugbreak();
+        assert(0);
     if (out->mRows != a->mRows || out->mCols != a->mCols)
-        __debugbreak();
+        assert(0);
 
     for (int r = 0; r < a->mRows; r++) {
         for (int c = 0; c < a->mCols; c++) {
@@ -599,9 +599,9 @@ void intnn_mat_add_const(intnn_mat* out, const intnn_mat* a, int val) {
 // 矩阵乘常数：out = a * val
 void intnn_mat_mul_const(intnn_mat* out, const intnn_mat* a, int val) {
     if (!out || !a)
-        __debugbreak();
+        assert(0);
     if (out->mRows != a->mRows || out->mCols != a->mCols)
-        __debugbreak();
+        assert(0);
 
     for (int r = 0; r < a->mRows; r++) {
         for (int c = 0; c < a->mCols; c++) {
@@ -613,11 +613,11 @@ void intnn_mat_mul_const(intnn_mat* out, const intnn_mat* a, int val) {
 // 矩阵除常数：out = a / val
 void intnn_mat_div_const(intnn_mat* out, const intnn_mat* a, int val) {
     if (!out || !a)
-        __debugbreak();
+        assert(0);
     if (val == 0)
         val = 1;  // 防止除零
     if (out->mRows != a->mRows || out->mCols != a->mCols)
-        __debugbreak();
+        assert(0);
 
     for (int r = 0; r < a->mRows; r++) {
         for (int c = 0; c < a->mCols; c++) {
@@ -665,7 +665,7 @@ void intnn_self_mul_const(intnn_mat* mat, int val) {
 void intnn_self_div_const(intnn_mat* mat, int val) {
     if (val == 0) {
         // 避免除零，报错或返回
-        __debugbreak();
+        assert(0);
     }
     for (int r = 0; r < mat->mRows; ++r) {
         for (int c = 0; c < mat->mCols; ++c) {
@@ -682,7 +682,7 @@ void intnn_self_elem_add_const(intnn_mat* mat, int r, int c, int val) {
 
 void intnn_self_add_mat(intnn_mat* mat, const intnn_mat* b) {
     if (mat->mCols != b->mCols)
-        __debugbreak();
+        assert(0);
     if (mat->mRows == b->mRows) {
         for (int r = 0; r < mat->mRows; ++r) {
             for (int c = 0; c < mat->mCols; ++c) {
@@ -701,7 +701,7 @@ void intnn_self_add_mat(intnn_mat* mat, const intnn_mat* b) {
 
 void intnn_self_sub_mat(intnn_mat* mat, const intnn_mat* b) {
     if (!dimsEqual(mat, b))
-        __debugbreak();
+        assert(0);
     for (int r = 0; r < mat->mRows; ++r) {
         for (int c = 0; c < mat->mCols; ++c) {
             mat->mMat[r][c] -= b->mMat[r][c];
@@ -712,7 +712,7 @@ void intnn_self_mul_mat(intnn_mat* mat, const intnn_mat* b) {
     // 矩阵乘法： mat = mat * b
     // 先保存 mat 的副本
     if (mat->mCols != b->mRows)
-        __debugbreak();  // 维度不匹配
+        assert(0);  // 维度不匹配
 
     intnn_mat temp;
     // 假设你有分配和释放矩阵的函数
@@ -745,7 +745,7 @@ void intnn_self_mul_mat(intnn_mat* mat, const intnn_mat* b) {
 
 void intnn_self_elem_mul_mat(intnn_mat* mat, const intnn_mat* b) {
     if (!dimsEqual(mat, b))
-        __debugbreak();
+        assert(0);
     for (int r = 0; r < mat->mRows; ++r) {
         for (int c = 0; c < mat->mCols; ++c) {
             mat->mMat[r][c] *= b->mMat[r][c];
@@ -755,7 +755,7 @@ void intnn_self_elem_mul_mat(intnn_mat* mat, const intnn_mat* b) {
 
 void intnn_self_elem_div_mat(intnn_mat* mat, const intnn_mat* b) {
     if (!dimsEqual(mat, b))
-        __debugbreak();
+        assert(0);
     for (int r = 0; r < mat->mRows; ++r) {
         for (int c = 0; c < mat->mCols; ++c) {
             if (b->mMat[r][c] == 0) {
@@ -814,11 +814,11 @@ void intnn_slice_of(intnn_mat* out,
     if (rowStart < 0 || colStart < 0 || rowEnd >= in->mRows ||
         colEnd >= in->mCols) {
         printf("[WARN] slice_of: Index out of bounds\n");
-        __debugbreak();
+        assert(0);
     }
 
     if (rowEnd < rowStart || colEnd < colStart)
-        __debugbreak();
+        assert(0);
 
     int rows = rowEnd - rowStart + 1;
     int cols = colEnd - colStart + 1;
@@ -836,13 +836,13 @@ void intnn_indexed_slice_of(intnn_mat* out,
                             int start,
                             int end) {
     if (start < 0 || end > in->mRows || start >= end)
-        __debugbreak();
+        assert(0);
     int size = end - start;
     resetZero(out, size, in->mCols);
     for (int r = 0; r < size; ++r) {
         int idx = indices[start + r];
         if (idx < 0 || idx >= in->mRows)
-            __debugbreak();
+            assert(0);
         for (int c = 0; c < in->mCols; ++c) {
             out->mMat[r][c] = in->mMat[idx][c];
         }
@@ -851,7 +851,7 @@ void intnn_indexed_slice_of(intnn_mat* out,
 
 void intnn_random_k_samples_of(intnn_mat* out, const intnn_mat* in, int k) {
     if (k > in->mRows)
-        __debugbreak();
+        assert(0);
 
     int total = in->mRows;
     int* indices = malloc(sizeof(int) * total);
@@ -907,7 +907,7 @@ void intnn_mat_update_lr(intnn_mat* target,
 int intnn_count_max_match(const intnn_mat* predictions, const intnn_mat* targets) {
     if (predictions->mRows != targets->mRows) {
         printf("prediction: %d, targets: %d\n", predictions->mRows, targets->mRows);
-        __debugbreak();
+        assert(0);
     }
     assert(predictions->mRows == targets->mRows);
     assert(predictions->mCols == targets->mCols);

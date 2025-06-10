@@ -14,7 +14,7 @@ int intnn_batch_l2_loss(intnn_mat* lossMat, const intnn_mat* yMat, const intnn_m
     if (!intnn_dims_equal(yMat, yHatMat)) {
 		printf("yMat size: (%d, %d)\n", yMat->mRows, yMat->mCols);
 		printf("yHatMat size: (%d, %d)\n", yHatMat->mRows, yHatMat->mCols);
-        __debugbreak();
+        assert(0);
     }
 
     assert(intnn_dims_equal(yMat, yHatMat));
