@@ -1,15 +1,19 @@
 import torch
 import torch.nn as nn
+import torch.nn.init as init
 import torch.optim as optim
+from torchvision import transforms
 from torchvision.datasets.mnist import read_image_file, read_label_file
 from time import time
+
+torch.random.manual_seed(0)
 
 # Hyperparameters
 dim_input = 28 * 28
 dim1 = 100
 dim2 = 50
 num_classes = 10
-epochs = 20
+epochs = 50
 batch_size = 20
 lr = 1.0 / 100
 
@@ -53,15 +57,24 @@ class DNN(nn.Module):
         self.softmax = nn.Softmax(dim=1)
     
     def forward(self, x):
-        x = self.relu(self.fc1(x))
-        x = self.relu(self.fc2(x))
-        x = self.softmax(self.fc3(x))
+        x = self.tanh(self.fc1(x))
+        x = self.tanh(self.fc2(x))
+        x = self.fc3(x) # No activation here for CE (it applies softmax internally)
         return x
+
+def init_weights_xavier(m):
+    if isinstance(m, nn.Linear):
+        # Xavier uniform initialization for weights
+        init.xavier_uniform_(m.weight)
+        # Initialize biases to 0
+        if m.bias is not None:
+            init.constant_(m.bias, 0)
 
 device = torch.device("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
 print(device)
 model = DNN().to(device)
-criterion = nn.MSELoss()
+model.apply(init_weights_xavier)
+criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=lr)
 
 # One-hot encoding helper
