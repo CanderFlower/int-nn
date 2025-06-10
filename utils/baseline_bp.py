@@ -13,7 +13,7 @@ dim_input = 28 * 28
 dim1 = 100
 dim2 = 50
 num_classes = 10
-epochs = 50
+epochs = 35
 batch_size = 20
 lr = 1.0 / 100
 
