@@ -3,6 +3,8 @@ import torch.nn as nn
 from torchvision.datasets.mnist import read_image_file, read_label_file
 from time import time
 
+torch.random.manual_seed(0)
+
 # Hyperparameters
 dim_input = 28 * 28
 dim1 = 100
