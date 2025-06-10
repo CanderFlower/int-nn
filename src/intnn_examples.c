@@ -66,21 +66,6 @@ int example_intnn_fc_dfa_mnist() {
     fc3->mNext = NULL; // 最后一层没有下一层
     fc1->mPrev = NULL; // 第一层没有前一层
 
-    // 创建测试用层（结构一致，但参数待复制）
-    intnn_fc_layer* fc1_test = intnn_fc_create(dimInput, dim1);
-    intnn_fc_layer* fc2_test = intnn_fc_create(dim1, dim2);
-    intnn_fc_layer* fc3_test = intnn_fc_create(dim2, numClasses);
-    intnn_fc_set_actv(fc1_test, INTNN_ACTV_TANH);
-    intnn_fc_set_actv(fc2_test, INTNN_ACTV_TANH);
-    intnn_fc_set_actv(fc3_test, INTNN_ACTV_TANH);
-
-    fc1_test->mNext = fc2_test;
-    fc2_test->mNext = fc3_test;
-    fc3_test->mPrev = fc2_test;
-    fc2_test->mPrev = fc1_test;
-    fc3->mNext = NULL;
-    fc1->mPrev = NULL;
-
     int correct;
 
     //// 初始化前向精度（训练用）
@@ -103,6 +88,8 @@ int example_intnn_fc_dfa_mnist() {
     intnn_mat* lossMat = intnn_create_mat(miniBatchSize, numClasses);
     intnn_mat* deltaMat = intnn_create_mat(miniBatchSize, numClasses);
     printf("Epoch,\tTrainLoss,\tTrainAcc,\tTestAcc\n");
+
+    clock_t start = clock();
 
     for (int ep = 1; ep <= epochs; ++ep) {
         intnn_tools_shuffle_indices(indices, numTrain);
@@ -143,10 +130,14 @@ int example_intnn_fc_dfa_mnist() {
         if ((ep % 10 == 0) && lrInv < 20000) lrInv *= 2;
     }
 
+    clock_t end = clock();
+    double elapsed_secs = (double)(end - start) / CLOCKS_PER_SEC;
+    printf("Training time: %.2f seconds\n", elapsed_secs);
+
     // 释放所有资源
-    intnn_fc_free(fc1);        intnn_fc_free(fc1_test);
-    intnn_fc_free(fc2);        intnn_fc_free(fc2_test);
-    intnn_fc_free(fc3);        intnn_fc_free(fc3_test);
+    intnn_fc_free(fc1);
+    intnn_fc_free(fc2);
+    intnn_fc_free(fc3);
     intnn_free_mat(trainImages); intnn_free_mat(trainLabels);
     intnn_free_mat(testImages);  intnn_free_mat(testLabels);
     intnn_free_mat(trainTarget); intnn_free_mat(testTarget);
