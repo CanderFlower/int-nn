@@ -16,7 +16,7 @@ int example_intnn_fc_dfa_mnist() {
     const int dimInput = 28 * 28;
     const int dim1 = 100;
     const int dim2 = 50;
-    const int epochs = 5;
+    const int epochs = 10;
     const int miniBatchSize = 20;
     int lrInv = 1000;
 

@@ -10,7 +10,7 @@ dim_input = 28 * 28
 dim1 = 100
 dim2 = 50
 num_classes = 10
-epochs = 20
+epochs = 40
 batch_size = 20
 lr = 1.0 / 100
 
@@ -93,7 +93,7 @@ def one_hot(labels, num_classes):
     return torch.eye(num_classes, device=labels.device)[labels]
 
 # Training
-print("Epoch,\tTrainLoss,\tTrainAcc,\tTestAcc")
+print(f"{'Epoch':<6}{'TrainLoss':<12}{'TrainAcc':<12}{'TestAcc':<10}")
 start = time()
 for ep in range(1, epochs+1):
     model.train()
@@ -119,7 +119,7 @@ for ep in range(1, epochs+1):
             outputs = model(inputs)
             test_correct += (outputs.argmax(dim=1) == labels).sum().item()
 
-    print(f"{ep},\t{int(total_loss)},\t{total_correct/len(trainset)*100:.2f}%,\t\t{test_correct/len(testset)*100:.2f}%")
+    print(f"{ep:<6}{int(total_loss):<12}{f'{total_correct/len(trainset)*100:.2f}%':<12}{f'{test_correct/len(testset)*100:.2f}%':<10}")
 
 end = time()
 print(f"Training time: {end - start:.2f} seconds")
