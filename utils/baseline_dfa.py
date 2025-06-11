@@ -10,9 +10,9 @@ dim_input = 28 * 28
 dim1 = 100
 dim2 = 50
 num_classes = 10
-epochs = 40
+epochs = 50
 batch_size = 20
-lr = 1.0 / 100
+lr = 1.0 / 32
 
 # Data
 class CustomMNIST(torch.utils.data.Dataset):
