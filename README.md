@@ -25,7 +25,3 @@ Final test accuracy: 96.77%
 - [@NekoYellow](https://github.com/NekoYellow)
 - [@tuihuademing2](https://github.com/tuihuademing2)
 - [@CanderFlower](https://github.com/CanderFlower)
-
-## References
-- [jaewoosong/pocketnn](https://github.com/jaewoosong/pocketnn/)
-- [PocketNN: Integer-only Training and Inference of Neural Networks via Direct Feedback Alignment and Pocket Activations in Pure C++](https://arxiv.org/abs/2201.02863#)
